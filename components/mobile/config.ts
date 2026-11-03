@@ -1,0 +1,265 @@
+/*
+ * Everything you might want to tune about the mobile lives in this file.
+ *
+ * Units: lengths are "world units" (the top arm is about 1.6 long; the canvas scales the
+ * whole sculpture to fit), time is seconds, angles in DESIGN are degrees.
+ */
+
+export type ColorKey = "ink" | "red" | "blue";
+export type ShapeKind = "leaf" | "petal" | "boomerang" | "blade" | "fin";
+
+/** A flat sheet-metal shape fixed to the end of an arm. */
+export interface ShapeSpec {
+  shape: ShapeKind;
+  /** Rough width of the shape, in world units. */
+  size: number;
+  color: ColorKey;
+  /** Rotation of the cut-out within its own plane, in degrees. */
+  rot?: number;
+  /** Mirror the cut-out top-to-bottom. */
+  flip?: boolean;
+}
+
+/**
+ * A wire arm. It hangs from a hook at its balance point, which is computed from the masses
+ * below it (see physics.ts), so you only choose its length and what hangs from each end.
+ */
+export interface RodSpec {
+  /** Horizontal length of the arm, end to end. */
+  len: number;
+  /** How much the ends droop: the arm follows v(u) = bend·u² + tilt·u around its pivot. */
+  bend?: number;
+  /** Tilts the arm (positive dips the right end). */
+  tilt?: number;
+  /** Resting yaw relative to the arm above, in degrees. */
+  rest?: number;
+  /** Length of the hook between the parent's arm end and this arm's balance point. */
+  drop?: number;
+  left: NodeSpec;
+  right: NodeSpec;
+}
+
+export type NodeSpec = RodSpec | ShapeSpec;
+
+const rod = (spec: RodSpec): RodSpec => spec;
+const sheet = (shape: ShapeKind, size: number, color: ColorKey, extra: Partial<ShapeSpec> = {}): ShapeSpec => ({
+  shape,
+  size,
+  color,
+  ...extra,
+});
+
+/*
+ * The arrangement. Mostly black and red-orange, with a single blue.
+ * Add or remove arms freely: balance points, inertia and springs are all derived.
+ */
+export const DESIGN: RodSpec = rod({
+  len: 1.5,
+  bend: 0.24,
+  tilt: -0.02,
+  rest: 0,
+  // Left: a black cascade arcing down and outward, ending in the blue.
+  left: rod({
+    len: 1.0,
+    bend: 0.34,
+    tilt: 0.04,
+    rest: 18,
+    drop: 0.07,
+    left: rod({
+      len: 0.72,
+      bend: 0.44,
+      rest: -26,
+      drop: 0.06,
+      left: sheet("blade", 0.3, "ink", { rot: 14 }),
+      right: rod({
+        len: 0.48,
+        bend: 0.55,
+        rest: 30,
+        drop: 0.06,
+        left: sheet("fin", 0.22, "blue", { rot: 8 }),
+        right: sheet("boomerang", 0.17, "ink", { rot: 18 }),
+      }),
+    }),
+    right: sheet("boomerang", 0.32, "ink", { rot: 10 }),
+  }),
+  // Right: red petals growing toward the big leaf that counterweights everything.
+  right: rod({
+    len: 0.92,
+    bend: 0.32,
+    tilt: -0.03,
+    rest: -16,
+    drop: 0.08,
+    left: rod({
+      len: 0.62,
+      bend: 0.44,
+      rest: 24,
+      drop: 0.06,
+      left: rod({
+        len: 0.42,
+        bend: 0.6,
+        rest: -28,
+        drop: 0.05,
+        left: sheet("petal", 0.15, "red", { rot: -10 }),
+        right: sheet("blade", 0.18, "ink", { rot: 4 }),
+      }),
+      right: sheet("petal", 0.24, "red", { rot: 12 }),
+    }),
+    right: sheet("leaf", 0.42, "red", { rot: 8 }),
+  }),
+});
+
+/** How the structure responds. */
+export const PHYSICS = {
+  /** Mass per unit area of the sheet metal. */
+  sheetDensity: 1,
+  /** Mass per unit length of the wire arms (light compared with the sheets). */
+  wireDensity: 0.012,
+  /** Natural period (s) of the whole mobile twisting on its long top thread. */
+  rootPeriod: 24,
+  /** Natural period (s) of an 0.8-long arm twisting on its hook; scales with √length. */
+  armPeriod: 9,
+  /** Damping ratio of each hook's twist (0 rings forever, 1 is critically damped). */
+  damping: 0.04,
+  /** Linear air drag on the sheets. Also damps the motion, since sheets push through air. */
+  drag: 0.25,
+  /** Fixed physics timestep (s). */
+  timestep: 1 / 120,
+  /** Random yaw offset (degrees) at load, so the mobile is already moving. */
+  startJitter: 8,
+  /**
+   * How far (degrees) an arm may turn away from its resting angle before it meets a soft
+   * stop, as if brushing a neighbor. The on-screen placement guarantees the text stays
+   * clear for any pose within this range.
+   */
+  swingLimit: 35,
+};
+
+/** The ambient air current: smooth, slow and quiet. */
+export const AIR = {
+  /** Typical speed of the drifting air (world units / s). */
+  speed: 0.15,
+  /** A slow, steady drift on top of the swirls. */
+  drift: 0.045,
+  /** Range of swirl sizes (world units) and how long each takes to pass (s). */
+  wavelength: [1.4, 3.4] as const,
+  period: [10, 34] as const,
+  /** Tiny random twisting of each arm (rad/s²), standing in for eddies too small to model. */
+  eddy: 0.022,
+  /** Same, for the whole mobile on its thread. */
+  rootEddy: 0.011,
+};
+
+/** The cursor as a breeze, and clicks and taps as puffs that build up a gust. */
+export const BREEZE = {
+  /** How strongly cursor motion becomes air motion right around the cursor. */
+  gain: 1.4,
+  /** How much of any motion pushes air in toward the wall (the cursor is in front of the mobile). */
+  push: 0.65,
+  /** Reach of the breeze around the cursor (world units). */
+  radius: 0.38,
+  /** Cap on the breeze speed (world units / s), so fast flicks don't fling the arms. */
+  max: 4,
+  /** Peak speed of a tap's puff, how long it lasts (s), and its initial reach. */
+  puffSpeed: 1.2,
+  puffLife: 1.2,
+  puffRadius: 0.3,
+  /**
+   * Gusts. Moving the cursor around the mobile builds up a gust (0–1) that stirs all of it,
+   * not just the sheets under the cursor; it dies away once the cursor rests.
+   *   gustBuild: gust gained per CSS px of cursor travel over the mobile.
+   *   gustDecay: seconds for a gust to fade to about a third.
+   *   gustTap:   share of the remaining gust added by each click or tap.
+   *   At full gust the air is (1 + gustWind)× stronger and changes (1 + gustTempo)× faster,
+   *   and the small random eddies are (1 + gustEddy)× stronger.
+   */
+  gustBuild: 0.0009,
+  gustDecay: 2.2,
+  gustTap: 0.22,
+  gustWind: 1.2,
+  gustTempo: 2,
+  gustEddy: 1.3,
+};
+
+/** Drawing. */
+export const VIEW = {
+  /** Camera distance in world units. Larger means flatter perspective. */
+  camera: 6.5,
+  /** Largest scale (CSS px per world unit), for very large screens. */
+  maxScale: 330,
+  /** If the sculpture would be narrower than this (CSS px) beside the text, stack it above. */
+  minWidth: 340,
+  /**
+   * In wide layouts (mobile beside the text) there is room below, so the top arm's arc
+   * droops up to wideArc times more than designed, as far as the window height allows.
+   * The arms below get only wideArcLower of that extra droop (0 = as designed).
+   */
+  wideArc: 2,
+  wideArcLower: 0.2,
+  shadow: {
+    /** Distance of the wall behind the thread, as a multiple of the mobile's radius. */
+    wall: 0.9,
+    /** Direction of the light rays (x right, y down), per unit of depth toward the wall. */
+    light: [0.07, 0.11] as const,
+  },
+};
+
+/** How the mobile is printed in ASCII characters (draw-ascii.ts). */
+export const ASCII = {
+  /** Character font; a monospace face keeps each sheet's character grid even. */
+  font: '"CMU Typewriter", ui-monospace, "SF Mono", Menlo, monospace',
+  /** Font size as a fraction of the drawing scale (CSS px per world unit), within limits. */
+  fontScale: 0.058,
+  minFont: 10,
+  maxFont: 13.5,
+  /** Row height as a multiple of the font size. */
+  lineHeight: 1.1,
+  /**
+   * What is printed on the sheets: RL terms, laid out in reading order through each sheet
+   * with operators between them. As a sheet turns, terms swap in place for other terms of
+   * the same length, so nothing around them shifts. Add or edit freely; lengths are counted
+   * automatically. Stick to characters CMU Typewriter has: ASCII, Greek letters, and
+   * ← → · × ± √ (no ∇ ∑ ∂ ∫ ≈ ∈, which would fall back to another font).
+   */
+  terms: [
+    "α", "β", "γ", "δ", "ε", "θ", "λ", "μ", "π", "ρ", "σ", "τ",
+    "dθ", "Δθ", "V*", "Q*", "π*", "s'", "a'", "r'",
+    "r_t", "s_t", "a_t", "γ^t", "G_t", "A_t", "δ_t", "π_θ", "max", "log", "E_π", "Σ_t",
+    "V(s)", "Q(s)", "π(a)", "R(s)", "E[r]", "A(s)", "H(π)", "σ(x)", "E[G]",
+    "V(s')", "Q(s')", "KL(π)", "r+γV'", "Σγ^tr", "P(s')",
+    "π(·|s)", "Q(s,a)", "A(s,a)", "R(s,a)", "V(s_t)", "logπ_θ", "argmax", "θ←θ+α", "E_π[G]",
+    "softmax", "E[V(s)]", "clip(ρ)", "max_aQ'", "P(s'|s)", "σ(Wx+b)",
+    "π_θ(a|s)", "Q(s',a')", "E_π[G_t]", "r_t+γV_t", "V(s_t+1)",
+    "E[G(s,a)]", "logπ(a|s)", "P(s'|s,a)", "max_aQ(s)",
+    "Q(s_t,a_t)", "π(a_t|s_t)", "E[Σγ^tr_t]", "R(s_t,a_t)",
+  ],
+  /** One-character operators placed between terms (they swap among themselves). */
+  operators: ["=", "+", "-", "·", "~", "←", "×", "|"],
+  /**
+   * How often terms swap: per term, swaps per radian its sheet turns, plus a slow rate in
+   * still air (swaps per second). The shadow's dots swap at the same rates.
+   */
+  swapPerRadian: 14,
+  swapDrift: 0.08,
+  /** Faint characters the wall shadow is made of. */
+  shadowGlyphs: [".", "·", "'", ",", ":"],
+  /** Weight of the sheets' characters (CMU Typewriter has 400 and 700); bold reads more solid. */
+  sheetWeight: 700,
+  /** Partly covered cells along a sheet's edge are shaded with these, from faint to dense. */
+  edgeRamp: ".,:;",
+  /** Cells at least this covered print terms; less covered ones get edge shading. */
+  solidCoverage: 0.6,
+  /** Cells with less sheet coverage than this stay empty. */
+  minCoverage: 0.12,
+  /** How much paler a sheet gets as it turns away from the light (0–1). */
+  turnFade: 0.06,
+  /**
+   * Depth: parts farther from the viewer are printed closer to the background color.
+   * depthFade is the most they fade (0–1; --mobile-depth-fade in globals.css overrides it
+   * per color scheme); depthRange is the depth (world units, either side of the thread)
+   * over which the fade runs from none to full.
+   */
+  depthFade: 0.45,
+  depthRange: 0.7,
+  /** Opacity of the shadow dots. (Colors are the --mobile-* tokens in globals.css.) */
+  shadowOpacity: 0.2,
+};
