@@ -208,7 +208,7 @@ export const VIEW = {
    * the text column, the right edge, above the top pivot (the thread runs through it) and
    * the bottom. Within that space the mobile grows as large as it fits.
    */
-  sidePadding: { gap: 0.004, gapMin: 6, right: 8, top: 0.06, topMin: 28, topMax: 90, bottom: 16 },
+  sidePadding: { gap: 0.004, gapMin: 6, right: 8, top: 0.11, topMin: 48, topMax: 150, bottom: 16 },
   /**
    * Still while reading: scrolled down by `over` window heights or more, the mobile settles
    * (at `settle` per second) into its display pose, every arm turned nearly flat to the
@@ -224,14 +224,14 @@ export const VIEW = {
    * left side also bows a little further down, its end by `topLeftDip`, without reaching
    * further left.
    */
-  side: { narrow: 0.85, hooks: 1.4, topLeftDip: 0.1 },
+  side: { narrow: 0.85, hooks: 1.4, topLeftDip: 0.05 },
   /**
    * In wide layouts (mobile beside the text) there is room below, so the top arm's arc
    * droops up to wideArc times more than designed, as far as the window height allows.
    * The arms below get only wideArcLower of that extra droop (0 = as designed).
    */
-  wideArc: 2,
-  wideArcLower: 0.2,
+  wideArc: 1.7,
+  wideArcLower: 0.29,
   shadow: {
     /** Distance of the wall behind the thread, as a multiple of the mobile's radius. */
     wall: 0.9,
