@@ -50,8 +50,7 @@ export default function Copy() {
         {/* The body copy. */}
         <div>
           <p>
-            We’re a small group of engineers and roboticists exploring ideas in robot learning that are newly
-            within reach. Most of us are Stanford researchers who also work in labs like{" "}
+            We’re a small group of engineers and roboticists exploring ideas that are newly within reach. Most of us are Stanford researchers who also work in labs like{" "}
             <Link href="https://iliad.stanford.edu/">ILIAD</Link>,{" "}
             <Link href="https://real.stanford.edu/">REAL</Link>, and{" "}
             <Link href="https://hazyresearch.stanford.edu/">Hazy Research</Link>.
@@ -67,8 +66,8 @@ export default function Copy() {
               <Ref n={1} /> Most of the setup is no longer the bottleneck.
             </li>
             <li>
-              Frontier LLMs are also demonstrating spatial reasoning capabilities strong enough to generate
-              realistic 3D environments and even actuate robots directly.
+              Frontier LLMs are also demonstrating resounding spatial reasoning capabilities, strong enough to
+              generate realistic 3D environments and even actuate robots directly.
               <Ref n={2} /> We think much of the field still underestimates how much value these models can
               unlock when used creatively.
             </li>
@@ -92,7 +91,7 @@ export default function Copy() {
             a space with resources and other people working seriously on hard problems.
           </p>
 
-          <Heading>What we’re excited about</Heading>
+          <Heading>Early directions</Heading>
 
           <p>
             Right now, we’re most excited about three directions. The first is unexplored end effectors and
@@ -103,7 +102,7 @@ export default function Copy() {
 
           <p>
             The second is automating the <Link href="https://vedder.io/misc/novelty_pump.html">novelty pump</Link>.
-            Robot learning only improves with truly novel data, and today, finding the states and tasks a policy
+            Robot foundation models only improve with truly novel data, and today, finding the states and tasks a policy
             hasn’t seen is human operational work that doesn’t compound. Frontier models already know a lot
             about the world, and we think they can accelerate this process across the robotics and RL stack.
             We’re also interested in improving them as policies in their own right.
