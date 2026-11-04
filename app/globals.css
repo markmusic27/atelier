@@ -39,8 +39,25 @@
   src: url("https://cdn.jsdelivr.net/npm/computer-modern@0.1.2/fonts/cmu-typewriter-text-700-roman.woff2") format("woff2");
 }
 
+/*
+ * FK Roman Standard, used from the copy installed on this machine (the trial license doesn't
+ * cover serving it from a website). Missing glyphs, or a machine without it, fall back to Times New Roman.
+ */
+@font-face {
+  font-family: "FK Roman";
+  font-style: normal;
+  font-weight: 400;
+  src: local("FK Roman Standard Trial Regular"), local("FKRomanStandardTrial-Regular");
+}
+@font-face {
+  font-family: "FK Roman";
+  font-style: italic;
+  font-weight: 400;
+  src: local("FK Roman Standard Trial Oblique"), local("FKRomanStandardTrial-Oblique");
+}
+
 @theme inline {
-  --font-serif: "CMU Serif", "Computer Modern Serif", "Latin Modern Roman", "Iowan Old Style", Georgia, serif;
+  --font-serif: "FK Roman", "Times New Roman", Times, serif;
   --color-paper: var(--paper);
   --color-ink: var(--ink);
 }
