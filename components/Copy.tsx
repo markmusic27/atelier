@@ -1,5 +1,39 @@
 /* The page text. */
 
+import type { ReactNode } from "react";
+
+/* Footnotes, in order: the text for each numbered marker (<Ref n={…} />) in the copy. */
+const NOTES: ReactNode[] = [];
+
+const linkClass = "underline decoration-current/30 underline-offset-[0.18em] hover:decoration-current";
+
+function Link({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a href={href} className={linkClass}>
+      {children}
+    </a>
+  );
+}
+
+/** A footnote marker; it links to its note once that note is in NOTES. */
+function Ref({ n }: { n: number }) {
+  return (
+    <sup className="ml-[0.08em] text-[0.68em] leading-none">
+      {NOTES[n - 1] ? (
+        <a id={`fnref${n}`} href={`#fn${n}`} aria-label={`Footnote ${n}`} className="scroll-mt-8 px-[0.1em] no-underline">
+          {n}
+        </a>
+      ) : (
+        n
+      )}
+    </sup>
+  );
+}
+
+function Heading({ children }: { children: ReactNode }) {
+  return <h2 className="mt-10 mb-3 text-[1.3em] leading-snug font-medium">{children}</h2>;
+}
+
 export default function Copy() {
   return (
     <main className="page relative z-10 px-4 pt-14 pb-24 md:pt-[clamp(56px,12vh,128px)] md:pr-8 md:pl-[clamp(24px,7vw,112px)]">
@@ -15,55 +49,98 @@ export default function Copy() {
 
         {/* The body copy. */}
         <div>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          <p>
+            We’re a small group of engineers and roboticists exploring ideas in robot learning that are newly
+            within reach. Most of us are Stanford researchers who also work in labs like{" "}
+            <Link href="https://iliad.stanford.edu/">ILIAD</Link>,{" "}
+            <Link href="https://real.stanford.edu/">REAL</Link>, and{" "}
+            <Link href="https://hazyresearch.stanford.edu/">Hazy Research</Link>.
+          </p>
+
+          <p>We’re starting now because the economics and the possibilities of robotics research are shifting.</p>
+
+          <ol className="mb-[1.05em] list-decimal pl-[1.4em] marker:text-ink/60 [&_li]:mb-[0.6em] [&_li]:pl-[0.2em]">
+            <li>
+              Before an actual experiment, it used to take weeks to integrate components from several vendors,
+              calibrate poses, and fabricate a test rig, to name a few. Frontier AI has collapsed the cost of
+              software, and is starting to do the same for parts of hardware.
+              <Ref n={1} /> Most of the setup is no longer the bottleneck.
+            </li>
+            <li>
+              Frontier LLMs are also demonstrating spatial reasoning capabilities strong enough to generate
+              realistic 3D environments and even actuate robots directly.
+              <Ref n={2} /> We think much of the field still underestimates how much value these models can
+              unlock when used creatively.
+            </li>
+          </ol>
 
           <p>
-            Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-            nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-            dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+            Together, these mean that testing a strange idea is far cheaper than it was even a few months ago,
+            and more ambitious research directions are now within reach.
           </p>
 
           <p>
-            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-            est laborum. Curabitur pretium tincidunt lacus, nulla gravida orci a odio. Nullam varius, turpis et
-            commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris.
+            The name comes from nineteenth-century Paris, where ateliers were small workshops for artists and
+            architects to learn and create with one another outside of the academy. Much of the era’s most
+            important work came out of independent ateliers like the Académie Suisse, where Monet, Cézanne, and
+            Pissarro trained.
           </p>
 
           <p>
-            Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec
-            lobortis risus a elit. Etiam tempor, ut ullamcorper, ligula eu tempor congue, eros est euismod
-            turpis, id tincidunt sapien risus a quam.
+            We think robotics needs the same thing right now, and we envision Atelier as a contemporary
+            equivalent for engineers and roboticists. The point is not to commercialize our work, but to provide
+            a space with resources and other people working seriously on hard problems.
+          </p>
+
+          <Heading>What we’re excited about</Heading>
+
+          <p>
+            Right now, we’re most excited about three directions. The first is unexplored end effectors and
+            dexterous tool use. The field has mostly converged on parallel-jaw grippers and dexterous hands,
+            <Ref n={3} /> and we think the space of possible bodies, and how one collects data for them, is much
+            larger than what’s been tried.
           </p>
 
           <p>
-            Maecenas fermentum consequat mi. Donec fermentum, pellentesque malesuada nulla a mi. Duis sapien
-            sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet,
-            felis nisl adipiscing sapien, sed malesuada diam lacus eget erat.
+            The second is automating the <Link href="https://vedder.io/misc/novelty_pump.html">novelty pump</Link>.
+            Robot learning only improves with truly novel data, and today, finding the states and tasks a policy
+            hasn’t seen is human operational work that doesn’t compound. Frontier models already know a lot
+            about the world, and we think they can accelerate this process across the robotics and RL stack.
+            We’re also interested in improving them as policies in their own right.
           </p>
-
-          <p>Cras mollis scelerisque nunc.</p>
 
           <p>
-            Nullam arcu. Aliquam consequat, curabitur augue lorem, dapibus quis, laoreet et, pretium ac,
-            nisi.
-            <sup className="ml-[0.08em] text-[0.68em] leading-none">
-              <a id="fnref1" href="#fn1" aria-label="Footnote 1" className="scroll-mt-8 px-[0.1em] no-underline">
-                1
-              </a>
-            </sup>
+            The third is embodied alignment: making sure robots act in ways that follow our intent, including the
+            parts we don’t think to specify.
           </p>
 
-          <footer className="mt-12">
-            <hr className="mb-4 w-14 border-0 border-t border-current opacity-30" />
-            <p id="fn1" className="scroll-mt-8">
-              <sup className="mr-[0.25em] text-[0.75em]">1</sup>
-              Aenean ut orci vel massa suscipit pulvinar. Nulla sollicitudin, fusce varius ligula non tempus
-              aliquam.{" "}
-              <a href="#fnref1" aria-label="Back to text" className="no-underline opacity-70 hover:opacity-100">
-                ↩&#xFE0E;
-              </a>
-            </p>
-          </footer>
+          <Heading>Reach out</Heading>
+
+          <p>
+            If you have a bet you want to test and Atelier sounds appealing to you, we’d like to hear from you.
+            You don’t need to be at Stanford or in a lab. Reach out at{" "}
+            <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
+          </p>
+
+          <p>
+            If you’re a lab or company interested in sponsoring research or learning more about what we’re up
+            to, reach out at <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
+          </p>
+
+          {NOTES.length > 0 && (
+            <footer className="mt-12">
+              <hr className="mb-4 w-14 border-0 border-t border-current opacity-30" />
+              {NOTES.map((note, i) => (
+                <p key={i} id={`fn${i + 1}`} className="scroll-mt-8">
+                  <sup className="mr-[0.25em] text-[0.75em]">{i + 1}</sup>
+                  {note}{" "}
+                  <a href={`#fnref${i + 1}`} aria-label="Back to text" className="no-underline opacity-70 hover:opacity-100">
+                    ↩&#xFE0E;
+                  </a>
+                </p>
+              ))}
+            </footer>
+          )}
         </div>
       </article>
     </main>

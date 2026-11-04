@@ -42,18 +42,50 @@
 /*
  * FK Roman Standard, used from the copy installed on this machine (the trial license doesn't
  * cover serving it from a website). Missing glyphs, or a machine without it, fall back to Times New Roman.
+ * The trial draws accented letters without their accents (é as e), so it is limited to plain
+ * Latin and punctuation: é, ü, ç and the rest come from Times New Roman, scaled to match (below).
  */
 @font-face {
   font-family: "FK Roman";
   font-style: normal;
   font-weight: 400;
   src: local("FK Roman Standard Trial Regular"), local("FKRomanStandardTrial-Regular");
+  unicode-range: U+0000-00BF, U+2000-206F;
+}
+@font-face {
+  font-family: "FK Roman";
+  font-style: normal;
+  font-weight: 500;
+  src: local("FK Roman Standard Trial Medium"), local("FKRomanStandardTrial-Medium");
+  unicode-range: U+0000-00BF, U+2000-206F;
 }
 @font-face {
   font-family: "FK Roman";
   font-style: italic;
   font-weight: 400;
   src: local("FK Roman Standard Trial Oblique"), local("FKRomanStandardTrial-Oblique");
+  unicode-range: U+0000-00BF, U+2000-206F;
+}
+
+/*
+ * Times New Roman at FK Roman's x-height, for the letters FK Roman leaves out (é, ’, ə…), so they
+ * sit level with their neighbors. Only used when FK Roman is installed (html.fk, set in
+ * app/layout.tsx); otherwise the whole page is plain Times New Roman, as before.
+ */
+@font-face {
+  font-family: "Times for FK Roman";
+  font-style: normal;
+  src: local("Times New Roman"), local("TimesNewRomanPSMT");
+  size-adjust: 114%;
+}
+@font-face {
+  font-family: "Times for FK Roman";
+  font-style: italic;
+  src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT");
+  size-adjust: 114%;
+}
+html.fk body {
+  font-family: "FK Roman", "Times for FK Roman", "Times New Roman", Times, serif;
 }
 
 @theme inline {

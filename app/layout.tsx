@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 
@@ -21,6 +22,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
+        {/* Marks <html> with .fk if FK Roman is installed (same local names as in globals.css). */}
+        <Script id="fk-check" strategy="beforeInteractive">
+          {`new FontFace("fk-check", 'local("FK Roman Standard Trial Regular"), local("FKRomanStandardTrial-Regular")').load().then(function () { document.documentElement.classList.add("fk"); }, function () {});`}
+        </Script>
       </head>
       <body className="bg-paper font-serif text-[15.5px] leading-[1.7] text-ink antialiased md:text-[16.5px]">
         {children}
