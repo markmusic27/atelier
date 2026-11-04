@@ -74,6 +74,8 @@ export interface Rod {
   tilt: number;
   /** Resting yaw relative to the parent (radians). */
   rest: number;
+  /** How far it may turn from rest (radians): PHYSICS.swingLimit, or turnLimit at the top. */
+  limit: number;
   /** The arm's curve as designed (see setArcScale). */
   baseBend: number;
   baseTilt: number;
@@ -112,8 +114,8 @@ export interface Mobile {
   shapes: Shape[];
   /**
    * How far any part can reach to the left and right of the thread, and toward or away
-   * from the viewer, for any pose with every arm (the top one included) within
-   * PHYSICS.swingLimit of rest. left/right include the camera's perspective.
+   * from the viewer, for any pose with every arm (the top one included) within its limit
+   * (Rod.limit). left/right include the camera's perspective.
    */
   reach: { left: number; right: number; depth: number };
   /** Vertical extent below the top pivot. */
@@ -147,6 +149,7 @@ export function buildMobile(design: RodSpec, seed = 7): Mobile {
       bend: spec.bend ?? 0.12,
       tilt: spec.tilt ?? 0,
       rest: (spec.rest ?? 0) * DEG,
+      limit: (parent ? PHYSICS.swingLimit : PHYSICS.turnLimit) * DEG,
       baseBend: spec.bend ?? 0.12,
       baseTilt: spec.tilt ?? 0,
       drop: spec.drop ?? 0.07,
@@ -266,7 +269,7 @@ export function buildMobile(design: RodSpec, seed = 7): Mobile {
     const T = parent ? PHYSICS.armPeriod * Math.sqrt(L / 0.8) : PHYSICS.rootPeriod;
     const w0 = (2 * Math.PI) / T;
     r.k = I * w0 * w0;
-    r.c = 2 * PHYSICS.damping * I * w0;
+    r.c = 2 * (parent ? PHYSICS.damping : PHYSICS.rootDamping) * I * w0;
     return r;
   }
 
@@ -277,7 +280,7 @@ export function buildMobile(design: RodSpec, seed = 7): Mobile {
   // Bounds, used to fit the sculpture on screen without ever reaching the text.
   const m: Mobile = { rods, shapes, reach: { left: 0, right: 0, depth: 0 }, minY: 0, maxY: 0 };
   measureHeight(m);
-  m.reach = sweepReach(m, PHYSICS.swingLimit);
+  m.reach = sweepReach(m);
   return m;
 }
 
@@ -333,9 +336,8 @@ export function setArcScale(m: Mobile, k: number, lowerShare = 1) {
  * Finds the reach of the mobile by sweeping every arm through its allowed swing: each pose
  * holds one arm at an extreme or a random angle in range. Leaves the mobile at rest.
  */
-function sweepReach(m: Mobile, limitDeg: number, samples = 4000) {
+function sweepReach(m: Mobile, samples = 4000) {
   const rng = mulberry32(5);
-  const limit = limitDeg * DEG;
   const F = VIEW.camera;
   let left = 0;
   let right = 0;
@@ -348,6 +350,7 @@ function sweepReach(m: Mobile, limitDeg: number, samples = 4000) {
   };
   for (let n = 0; n < samples; n++) {
     for (const r of m.rods) {
+      const { limit } = r;
       const swing = n % 3 === 0 ? (rng() < 0.5 ? -limit : limit) : (rng() * 2 - 1) * limit;
       r.theta = (r.parent ? r.parent.theta : 0) + r.rest + swing;
     }
@@ -487,22 +490,39 @@ export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1, 
 
   // Hook springs: each pulls its rod toward its resting angle relative to the parent, and
   // pushes back on the parent equally. The top rod's spring is the thread, tied to the ceiling.
-  const limit = PHYSICS.swingLimit * DEG;
+  const stop = PHYSICS.stop;
   for (const r of rods) {
     const p = r.parent;
     const rel = r.theta - (p ? p.theta : 0) - r.rest * restScale;
     const relW = r.omega - (p ? p.omega : 0);
     let ts = -r.k * rel - r.c * relW;
-    // Soft stop past the swing limit (rarely reached; keeps the reach bound honest).
-    const over = Math.abs(rel) - limit;
-    if (over > 0) ts -= Math.sign(rel) * 12 * r.k * over;
+    // Nearing the limit (measured from the true rest), the hook stiffens and damps outward
+    // motion, easing in so it reads as the hook tightening.
+    const off = r.theta - (p ? p.theta : 0) - r.rest;
+    const into = (Math.abs(off) / r.limit - stop.from) / (1 - stop.from);
+    if (into > 0) {
+      const f = Math.min(1, into) ** 2;
+      const out = Math.sign(off);
+      ts -= out * f * stop.stiffness * r.k * r.limit;
+      if (relW * out > 0) ts -= f * stop.damping * 2 * Math.sqrt(r.k * r.I) * relW;
+    }
     r.torque += ts;
     if (p) p.torque -= ts;
   }
 
-  // Semi-implicit Euler: stable and plenty accurate at this timestep.
+  // Semi-implicit Euler: stable and plenty accurate at this timestep. Parents come first, so
+  // each arm's limit is checked against where its parent has just moved: an arm that would
+  // pass it stops there, keeping the reach bound (and the text) safe from any gust.
   for (const r of rods) {
     r.omega += (r.torque / r.I) * dt;
     r.theta += r.omega * dt;
+    const p = r.parent;
+    const off = r.theta - (p ? p.theta : 0) - r.rest;
+    if (Math.abs(off) > r.limit) {
+      const out = Math.sign(off);
+      r.theta -= off - out * r.limit;
+      const pw = p ? p.omega : 0;
+      if ((r.omega - pw) * out > 0) r.omega = pw;
+    }
   }
 }

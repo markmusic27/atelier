@@ -120,11 +120,13 @@ export const PHYSICS = {
   /** Mass per unit length of the wire arms (light compared with the sheets). */
   wireDensity: 0.012,
   /** Natural period (s) of the whole mobile twisting on its long top thread. */
-  rootPeriod: 24,
+  rootPeriod: 16,
   /** Natural period (s) of an 0.8-long arm twisting on its hook; scales with √length. */
   armPeriod: 9,
   /** Damping ratio of each hook's twist (0 rings forever, 1 is critically damped). */
   damping: 0.04,
+  /** Same, for the whole mobile on its thread: higher, so its slow drift stays modest. */
+  rootDamping: 0.1,
   /** Linear air drag on the sheets. Also damps the motion, since sheets push through air. */
   drag: 0.25,
   /** Fixed physics timestep (s). */
@@ -134,13 +136,21 @@ export const PHYSICS = {
    * on its thread, each arm off its rest by `min`–`max` degrees (either way, never zero), and
    * each already turning at up to `spin` degrees per second.
    */
-  start: { turn: 10, min: 4, max: 9, spin: 3 },
+  start: { turn: 7, min: 4, max: 9, spin: 3 },
   /**
-   * How far (degrees) an arm may turn away from its resting angle before it meets a soft
-   * stop, as if brushing a neighbor. The on-screen placement guarantees the text stays
-   * clear for any pose within this range.
+   * How far (degrees) an arm may turn away from its resting angle, and the whole mobile on
+   * its thread. No breeze, click or gust can carry it further. The on-screen placement
+   * guarantees the text stays clear for any pose within these limits.
    */
-  swingLimit: 35,
+  swingLimit: 25,
+  turnLimit: 12,
+  /**
+   * The stop at those limits: from `from` of the way there the hook stiffens, by up to
+   * `stiffness` times its own spring at the limit, and damps motion outward (up to `damping`
+   * times critical), so the mobile eases to a halt instead of hitting a wall. At the limit
+   * it stops outright.
+   */
+  stop: { from: 0.6, stiffness: 6, damping: 1.5 },
 };
 
 /** The ambient air current: smooth, slow and quiet. */
