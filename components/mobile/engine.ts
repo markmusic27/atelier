@@ -209,10 +209,11 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
       const top = clamp(vh * pad.top, pad.topMin, pad.topMax);
       const room = vh - top - pad.bottom;
       setArcs(1);
-      const s = Math.min(avail / span, room / bottom, VIEW.maxScale);
-      if (s * span < VIEW.minWidth) {
+      const fit = Math.min(avail / span, room / bottom, VIEW.maxScale);
+      if (fit * span < VIEW.minWidth) {
         stacked = true;
       } else {
+        const s = fit * VIEW.side.scale;
         // There's usually room below: let the arcs droop more, as far as the height allows.
         for (let k = VIEW.wideArc; k > 1; k -= 0.1) {
           setArcs(k);
@@ -220,7 +221,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
         }
         if (s * bottom > room) setArcs(1);
         scene.S = s;
-        scene.ox = left + s * reach.left + (avail - s * span) / 2;
+        scene.ox = left + s * reach.left + (avail - s * span) / 2 - avail * VIEW.side.nudge;
         scene.oy = top;
       }
     }
