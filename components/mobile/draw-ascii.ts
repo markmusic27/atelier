@@ -461,7 +461,8 @@ export function createAsciiRenderer(scene: Scene): Renderer {
 
   function resize() {
     const { S } = scene;
-    const fontPx = clamp(Math.round(S * ASCII.fontScale * 2) / 2, ASCII.minFont, ASCII.maxFont);
+    const minFont = scene.layout === "phone" ? ASCII.phoneMinFont : ASCII.minFont;
+    const fontPx = clamp(Math.round(S * ASCII.fontScale * 2) / 2, minFont, ASCII.maxFont);
     sheetFont = `${ASCII.sheetWeight} ${fontPx}px ${ASCII.font}`;
     wireFont = `${fontPx}px ${ASCII.font}`;
     ctx.font = sheetFont;

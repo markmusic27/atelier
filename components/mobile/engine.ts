@@ -45,6 +45,8 @@ export interface Scene {
   projectShadow: (x: number, y: number, z: number) => number;
   /** Colors from the --mobile-* tokens in globals.css. */
   palette: Record<PaletteKey, RGB>;
+  /** Beside the text ("side"), above it ("header"), or above it on a phone-width screen ("phone"). */
+  layout: "side" | "header" | "phone";
   /** How frozen the mobile is for reading (0 moving freely, 1 held still; VIEW.scrollCalm). */
   quiet: number;
 }
@@ -178,6 +180,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
       paper: [255, 255, 255],
     },
     quiet: 0,
+    layout: "side",
   };
 
   // -----------------------------------------------------------------------------------
@@ -194,6 +197,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
 
     if (!stacked) {
       html.removeAttribute("data-stacked");
+      scene.layout = "side";
       use(wide);
       const col = document.getElementById("column");
       const right = col ? col.getBoundingClientRect().right : vw / 2;
@@ -222,13 +226,17 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
 
     if (stacked) {
       if (!narrow.matches) html.setAttribute("data-stacked", "");
-      use(compact);
-      setArcs(1);
+      // Phone-width screens get the side view's deeper look; wider windows the compact one.
+      const phone = narrow.matches;
+      scene.layout = phone ? "phone" : "header";
+      const sideLook = phone && VIEW.header.phone.design === "side";
+      use(sideLook ? wide : compact);
+      setArcs(sideLook ? VIEW.wideArc : 1);
       // Center the artwork (not its thread), sized so that every reachable pose still fits
       // the width; then shrink the band above the text to the height actually needed.
       html.style.removeProperty("--mobile-h");
       const { width, height } = canvas.getBoundingClientRect();
-      const oy = 40;
+      const oy = phone ? VIEW.header.phone.thread : VIEW.header.thread;
       const { min, max } = rest.get(mobile)!;
       const center = (min + max) / 2;
       const half = Math.max(center + reach.left, reach.right - center);

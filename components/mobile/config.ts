@@ -204,6 +204,13 @@ export const VIEW = {
   /** If the sculpture would be narrower than this (CSS px) beside the text, stack it above. */
   minWidth: 440,
   /**
+   * The header view (mobile above the text). On phone-width screens it shows `phone.design`
+   * ("side" for the side view's arrangement, with its deeper droop and longer hooks, or
+   * "compact" for DESIGN as is) on a `phone.thread` px thread; on wider windows that are too
+   * narrow for the side view, it shows the compact DESIGN on a `thread` px thread.
+   */
+  header: { thread: 40, phone: { design: "side" as "side" | "compact", thread: 64 } },
+  /**
    * Padding around the side view's space (CSS px, or a fraction of the window): the gap to
    * the text column, the right edge, above the top pivot (the thread runs through it) and
    * the bottom. Within that space the mobile grows as large as it fits.
@@ -247,6 +254,8 @@ export const ASCII = {
   /** Font size as a fraction of the drawing scale (CSS px per world unit), within limits. */
   fontScale: 0.058,
   minFont: 10,
+  /** The smallest size on phone-width screens, where the whole sculpture is small. */
+  phoneMinFont: 6.5,
   maxFont: 15,
   /** Row height as a multiple of the font size. */
   lineHeight: 1.1,
