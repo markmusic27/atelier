@@ -77,6 +77,8 @@ export interface Rod {
   /** The arm's curve as designed (see setArcScale). */
   baseBend: number;
   baseTilt: number;
+  /** Extra drop curling the left end down (see arm()). */
+  dipL: number;
   drop: number;
   /** Where this rod hangs on its parent, in the parent's local coordinates. */
   hu: number;
@@ -119,8 +121,16 @@ export interface Mobile {
   maxY: number;
 }
 
-/** Height of the arm at distance u from its pivot. */
-export const arm = (r: Rod, u: number) => r.bend * u * u + r.tilt * u;
+/**
+ * Height of the arm at distance u from its pivot. The optional left dip bows the left side a
+ * little further down, as (u/a)²: nothing at the pivot, all of `dipL` at the end, a gentle
+ * even curve in between. The right side is untouched.
+ */
+export const arm = (r: Rod, u: number) => {
+  const v = r.bend * u * u + r.tilt * u;
+  if (u >= 0 || !r.dipL) return v;
+  return v + r.dipL * (u / r.a) ** 2;
+};
 
 const isRod = (n: NodeSpec): n is RodSpec => "len" in n;
 
@@ -193,6 +203,7 @@ export function buildMobile(design: RodSpec, seed = 7): Mobile {
     r.a = a;
     r.b = L - a;
     r.mass = M;
+    r.dipL = spec.leftDip ?? 0;
 
     // 3. Moment of inertia about the hook: the wire as a thin rod, each sheet from its
     //    second moment ∫u² dA, and each subtree as a point mass at its end.
@@ -362,6 +373,39 @@ export function resetPose(m: Mobile, jitterDeg = 0, seed = 3) {
   }
 }
 
+/**
+ * The opening pose (PHYSICS.start), so the mobile never opens flat: turned on its thread,
+ * every arm off its rest by between `min` and `max` degrees (either way, never zero), and,
+ * unless `still`, already turning.
+ */
+export function startPose(m: Mobile, still = false, seed = 3) {
+  const { turn, min, max, spin } = PHYSICS.start;
+  const rng = mulberry32(seed);
+  for (const r of m.rods) {
+    const sign = rng() < 0.5 ? -1 : 1;
+    const offset = r.parent ? sign * (min + rng() * (max - min)) : turn;
+    r.theta = (r.parent ? r.parent.theta : 0) + r.rest + offset * DEG;
+    r.omega = still ? 0 : (rng() * 2 - 1) * spin * DEG;
+  }
+}
+
+/**
+ * Eases the mobile toward its display pose, every arm turned nearly flat to the viewer (so it
+ * spreads to its full width) with `depth` of its resting turns kept, and lets its swing die
+ * away. `amount` (0–1) is how much of the way to go this step.
+ */
+export function settleToward(m: Mobile, depth: number, amount: number) {
+  if (amount <= 0) return;
+  const keep = 1 - amount;
+  const turn = new Map<Rod, number>();
+  for (const r of m.rods) {
+    const t = (r.parent ? turn.get(r.parent)! : 0) + r.rest;
+    turn.set(r, t);
+    r.theta += (depth * t - r.theta) * amount;
+    r.omega *= keep;
+  }
+}
+
 /** Positions of every pivot and sheet centroid from the current angles. */
 export function kinematics(m: Mobile) {
   for (const r of m.rods) {
@@ -394,9 +438,10 @@ const wind: Wind = { x: 0, z: 0 };
 
 /**
  * Advances the simulation by dt seconds. t is the air's clock (it runs faster in a gust),
- * and stir scales the eddies (1 in calm air).
+ * stir scales the eddies (1 in calm air), and restScale scales every arm's resting turn
+ * (below 1 eases the mobile toward facing the viewer, see settleToward()).
  */
-export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1) {
+export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1, restScale = 1) {
   const { rods } = m;
   kinematics(m);
 
@@ -445,7 +490,7 @@ export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1) 
   const limit = PHYSICS.swingLimit * DEG;
   for (const r of rods) {
     const p = r.parent;
-    const rel = r.theta - (p ? p.theta : 0) - r.rest;
+    const rel = r.theta - (p ? p.theta : 0) - r.rest * restScale;
     const relW = r.omega - (p ? p.omega : 0);
     let ts = -r.k * rel - r.c * relW;
     // Soft stop past the swing limit (rarely reached; keeps the reach bound honest).

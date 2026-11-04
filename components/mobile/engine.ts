@@ -6,8 +6,19 @@
  * The physics lives in physics.ts; every tuning knob lives in config.ts.
  */
 
-import { AIR, BREEZE, DESIGN, PHYSICS, VIEW, type ColorKey } from "./config";
-import { buildMobile, kinematics, resetPose, setArcScale, step, type Mobile, type Shape, type Wind } from "./physics";
+import { AIR, BREEZE, DESIGN, DESIGN_SIDE, PHYSICS, VIEW, type ColorKey } from "./config";
+import {
+  buildMobile,
+  kinematics,
+  resetPose,
+  setArcScale,
+  settleToward,
+  startPose,
+  step,
+  type Mobile,
+  type Shape,
+  type Wind,
+} from "./physics";
 import { mulberry32 } from "./shapes";
 
 export type RGB = [number, number, number];
@@ -34,6 +45,8 @@ export interface Scene {
   projectShadow: (x: number, y: number, z: number) => number;
   /** Colors from the --mobile-* tokens in globals.css. */
   palette: Record<PaletteKey, RGB>;
+  /** How frozen the mobile is for reading (0 moving freely, 1 held still; VIEW.scrollCalm). */
+  quiet: number;
 }
 
 export interface Renderer {
@@ -71,18 +84,60 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   const ctx = canvas.getContext("2d");
   if (!ctx) return () => {};
   const html = document.documentElement;
-  const mobile = buildMobile(DESIGN);
+
+  // Two versions of the arrangement: the side view hangs beside the text on wide screens,
+  // the compact one in the band above the text. Layout picks one (see use()).
+  const wide = buildMobile(DESIGN_SIDE);
+  const compact = buildMobile(DESIGN);
+  let mobile = compact;
 
   // -----------------------------------------------------------------------------------
   // Camera. A subtle perspective: points nearer the viewer (z > 0) are drawn larger.
   //   screen = origin + S · (x, camY + (y − camY)) · F / (F − z)
   // -----------------------------------------------------------------------------------
   const F = VIEW.camera;
-  const { reach } = mobile;
-  const span = reach.left + reach.right; // widest possible footprint on screen, world units
-  const kNear = F / (F - reach.depth); // magnification of the nearest possible point
+  let reach = mobile.reach;
+  let span = 0; // widest possible footprint on screen, world units
+  let kNear = 1; // magnification of the nearest possible point
+  let wallZ = 0; // the wall behind the mobile, for its shadow
   let camY = 0; // the camera's height, mid-mobile
   let bottom = 0; // lowest possible point on screen, below the pivot (world units)
+
+  /** The artwork's left and right edges at rest (world units, with perspective). */
+  function restExtent(m: Mobile) {
+    const saved = m.rods.map((r) => [r.theta, r.omega]);
+    resetPose(m);
+    kinematics(m);
+    let min = 0;
+    let max = 0;
+    const visit = (x: number, z: number) => {
+      const sx = (x * F) / (F - z);
+      min = Math.min(min, sx);
+      max = Math.max(max, sx);
+    };
+    for (const r of m.rods) {
+      visit(r.x - r.a * r.dx, r.z - r.a * r.dz);
+      visit(r.x + r.b * r.dx, r.z + r.b * r.dz);
+      for (const s of r.shapes) for (let j = 0; j < s.pts.length; j += 2) visit(r.x + s.pts[j] * r.dx, r.z + s.pts[j] * r.dz);
+    }
+    m.rods.forEach((r, i) => ([r.theta, r.omega] = saved[i]));
+    kinematics(m);
+    return { min, max };
+  }
+  const rest = new Map([wide, compact].map((m) => [m, restExtent(m)]));
+
+  /** Puts `m` on show (starting it swinging if it wasn't), and updates its bounds. */
+  function use(m: Mobile, restart = false) {
+    if (m !== mobile || restart) {
+      mobile = m;
+      startPose(m, still);
+    }
+    scene.mobile = m;
+    reach = m.reach;
+    span = reach.left + reach.right;
+    kNear = F / (F - reach.depth);
+    wallZ = -reach.depth * VIEW.shadow.wall;
+  }
 
   /** Sets how far the arcs droop, and updates the vertical measures that depend on it. */
   function setArcs(k: number) {
@@ -90,8 +145,6 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     camY = (mobile.minY + mobile.maxY) / 2;
     bottom = camY + (mobile.maxY - camY) * kNear;
   }
-  setArcs(1);
-  const wallZ = -reach.depth * VIEW.shadow.wall;
   const [lightX, lightY] = VIEW.shadow.light;
 
   const scene: Scene = {
@@ -124,6 +177,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
       string: [168, 163, 154],
       paper: [255, 255, 255],
     },
+    quiet: 0,
   };
 
   // -----------------------------------------------------------------------------------
@@ -140,13 +194,15 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
 
     if (!stacked) {
       html.removeAttribute("data-stacked");
+      use(wide);
       const col = document.getElementById("column");
       const right = col ? col.getBoundingClientRect().right : vw / 2;
-      const gap = Math.max(32, vw * 0.035);
+      const pad = VIEW.sidePadding;
+      const gap = Math.max(pad.gapMin, vw * pad.gap);
       const left = right + gap;
-      const avail = vw - left - 20;
-      const top = clamp(vh * 0.13, 48, 150);
-      const room = vh - top - 36;
+      const avail = vw - left - pad.right;
+      const top = clamp(vh * pad.top, pad.topMin, pad.topMax);
+      const room = vh - top - pad.bottom;
       setArcs(1);
       const s = Math.min(avail / span, room / bottom, VIEW.maxScale);
       if (s * span < VIEW.minWidth) {
@@ -166,15 +222,20 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
 
     if (stacked) {
       if (!narrow.matches) html.setAttribute("data-stacked", "");
+      use(compact);
       setArcs(1);
-      // Fit the width, then shrink the band above the text to the height actually needed.
+      // Center the artwork (not its thread), sized so that every reachable pose still fits
+      // the width; then shrink the band above the text to the height actually needed.
       html.style.removeProperty("--mobile-h");
       const { width, height } = canvas.getBoundingClientRect();
       const oy = 40;
-      const s = Math.min((width - 32) / span, (height - oy - 24) / bottom, VIEW.maxScale);
+      const { min, max } = rest.get(mobile)!;
+      const center = (min + max) / 2;
+      const half = Math.max(center + reach.left, reach.right - center);
+      const s = Math.min((width - 32) / (2 * half), (height - oy - 24) / bottom, VIEW.maxScale);
       scene.S = s;
       scene.oy = oy;
-      scene.ox = 16 + s * reach.left + (width - 32 - s * span) / 2;
+      scene.ox = width / 2 - s * center;
       html.style.setProperty("--mobile-h", `${Math.ceil(oy + s * bottom + 24)}px`);
     } else {
       html.style.removeProperty("--mobile-h");
@@ -229,9 +290,9 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
 
   function current(x: number, z: number, t: number, out: Wind) {
     const calm = AIR.speed * (0.75 + 0.25 * Math.sin(0.041 * t) * Math.sin(0.027 * t + 2));
-    const strength = calm * (1 + BREEZE.gustWind * gust);
-    let wx = AIR.drift * Math.cos(0.017 * t + 1.3);
-    let wz = AIR.drift * Math.sin(0.011 * t);
+    const strength = calm * (1 - quiet + BREEZE.gustWind * gust);
+    let wx = (1 - quiet) * AIR.drift * Math.cos(0.017 * t + 1.3);
+    let wz = (1 - quiet) * AIR.drift * Math.sin(0.011 * t);
     for (const s of swirls) {
       const v = strength * s.amp * Math.sin(s.kx * x + s.kz * z - s.w * t + s.phase);
       wx += s.fx * v;
@@ -251,18 +312,24 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   // The air runs on its own clock (airT), which speeds up in a gust.
   // -----------------------------------------------------------------------------------
   const pointer = { x: 0, y: 0, lastX: 0, lastY: 0, vx: 0, vy: 0, inside: false };
-  const puffs: { x: number; y: number; t: number }[] = [];
+  const puffs: { x: number; y: number; t: number; power: number }[] = [];
   let simT = 0;
   let airT = 0;
   let gust = 0;
+  // Still while reading (VIEW.scrollCalm): `quiet` eases to 1 once the page is scrolled, and
+  // back to 0 at the top or while someone makes a gust. The more quiet, the more the ambient
+  // air fades and the hooks' resting turns shift toward the open display pose, so the mobile
+  // comes to rest there (and its letters stop changing). Cursor breezes and puffs still act.
+  let quiet = 0;
+  let frozen = false; // held exactly still (no simulation at all) while reading
 
-  /** 1 over the area the mobile can reach on screen, falling off with distance outside it. */
-  function nearMobile(x: number, y: number) {
+  /**
+   * Whether a point (canvas px) is in the artwork's area, the space the mobile can reach.
+   * Only the cursor and clicks inside it stir the mobile.
+   */
+  function inArt(x: number, y: number) {
     const { S, ox, oy } = scene;
-    const dx = Math.max(ox - S * reach.left - x, 0, x - (ox + S * reach.right));
-    const dy = Math.max(-y, 0, y - (oy + S * bottom));
-    const d = Math.hypot(dx, dy) / (BREEZE.radius * S);
-    return Math.exp(-d * d);
+    return x >= ox - S * reach.left && x <= ox + S * reach.right && y >= 0 && y <= oy + S * bottom;
   }
 
   const toCanvas = (e: MouseEvent): [number, number] => {
@@ -288,9 +355,10 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   const onDown = (e: PointerEvent) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     const [x, y] = toCanvas(e);
-    puffs.push({ x, y, t: simT });
+    if (!inArt(x, y)) return; // only clicks on the artwork stir it
+    puffs.push({ x, y, t: simT, power: 1 });
     if (puffs.length > 6) puffs.shift();
-    gust += BREEZE.gustTap * nearMobile(x, y) * (1 - gust);
+    gust += BREEZE.gustTap * (1 - gust);
   };
 
   // Clicks pass through the canvas to the page, so double-clicking the artwork would select
@@ -299,7 +367,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     if (e.detail < 2) return;
     if (document.getElementById("column")?.contains(e.target as Node)) return;
     const [x, y] = toCanvas(e);
-    if (nearMobile(x, y) > 0.5) e.preventDefault();
+    if (inArt(x, y)) e.preventDefault();
   };
 
   /**
@@ -307,20 +375,21 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
    * gust it builds up.
    */
   function updatePointer(dt: number) {
+    // Movement only counts inside the artwork's area; elsewhere the breeze fades to nothing.
     let rawX = 0;
     let rawY = 0;
-    if (pointer.inside && dt > 0) {
+    if (pointer.inside && dt > 0 && inArt(pointer.x, pointer.y)) {
       rawX = (pointer.x - pointer.lastX) / dt;
       rawY = (pointer.y - pointer.lastY) / dt;
-      pointer.lastX = pointer.x;
-      pointer.lastY = pointer.y;
     }
+    pointer.lastX = pointer.x;
+    pointer.lastY = pointer.y;
     const a = 1 - Math.exp(-dt / 0.09);
     pointer.vx += (rawX - pointer.vx) * a;
     pointer.vy += (rawY - pointer.vy) * a;
 
     const travel = Math.hypot(rawX, rawY) * dt; // CSS px moved this frame
-    gust += BREEZE.gustBuild * travel * nearMobile(pointer.x, pointer.y) * (1 - gust);
+    gust += BREEZE.gustBuild * travel * (1 - gust);
     gust *= Math.exp(-dt / BREEZE.gustDecay);
   }
 
@@ -358,7 +427,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
       const dx = s.sx - p.x;
       const dy = s.sy - p.y;
       const d = Math.hypot(dx, dy) + 1e-6;
-      const f = BREEZE.puffSpeed * env * Math.exp(-(d * d) / (2 * sigma * sigma));
+      const f = BREEZE.puffSpeed * p.power * env * Math.exp(-(d * d) / (2 * sigma * sigma));
       out.x += 0.8 * f * (dx / d);
       out.z -= 0.6 * f;
     }
@@ -386,17 +455,40 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   let raf = 0;
   let last = 0;
   let acc = 0;
+
   let visible = true;
+
+  // The opening gust: once, shortly after the page opens, a strong puff hits the biggest
+  // sheet head-on (pushing it back toward the wall) and sets the mobile swinging.
+  let opened = false;
+  function openingGust() {
+    opened = true;
+    const biggest = mobile.shapes.reduce((a, b) => (b.area > a.area ? b : a));
+    puffs.push({ x: biggest.sx, y: biggest.sy, t: simT, power: BREEZE.openingPower });
+  }
 
   function frame(now: number) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     if (!visible) return;
+    if (!opened && simT >= BREEZE.openingDelay) openingGust();
     updatePointer(dt);
-    acc += dt;
+    const calm = VIEW.scrollCalm;
+    const scrolled = clamp(window.scrollY / (calm.over * window.innerHeight), 0, 1);
+    const target = gust > calm.wake ? 0 : scrolled; // only a deliberate gust wakes it
+    quiet += (target - quiet) * (1 - Math.exp(-dt / 0.5));
+    scene.quiet = quiet;
+    // Nearly settled and still meant to be still: snap exactly into the display pose with
+    // every velocity at zero, and stop simulating until it is woken.
+    if (target === 1 && quiet > 0.99) {
+      if (!frozen) settleToward(mobile, calm.depth, 1);
+      frozen = true;
+    } else frozen = false;
+    acc = frozen ? 0 : acc + dt;
     while (acc >= PHYSICS.timestep) {
-      step(mobile, PHYSICS.timestep, airT, air, 1 + BREEZE.gustEddy * gust);
+      step(mobile, PHYSICS.timestep, airT, air, 1 - quiet + BREEZE.gustEddy * gust, 1 - (1 - calm.depth) * quiet);
+      settleToward(mobile, calm.depth, 1 - Math.exp(-PHYSICS.timestep * calm.settle * quiet * quiet));
       airT += PHYSICS.timestep * (1 + BREEZE.gustTempo * gust);
       simT += PHYSICS.timestep;
       acc -= PHYSICS.timestep;
@@ -407,10 +499,10 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   function start() {
     cancelAnimationFrame(raf);
     if (still) {
-      resetPose(mobile);
+      startPose(mobile, true);
       render();
     } else {
-      resetPose(mobile, PHYSICS.startJitter);
+      startPose(mobile);
       last = performance.now();
       raf = requestAnimationFrame(frame);
     }

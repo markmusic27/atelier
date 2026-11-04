@@ -10,9 +10,9 @@ export default function Copy() {
 
         {/* A dictionary entry for the name. */}
         <div className="mb-4 text-ink/60">
-          /ˌa·təl·ˈyā/ · <i>proper noun</i>
+          a-tə-lye · <i>proper noun</i>
         </div>
-        <div className="mb-7">A workshop or studio for asymmetric bets in robot learning.</div>
+        <div className="mb-7">A workshop dedicated to asymmetric research bets in robot learning.</div>
         <hr className="mb-7 w-14 border-0 border-t border-current opacity-30" />
 
         <p>Atelier is a workshop for robot learning. Based near Stanford.</p>

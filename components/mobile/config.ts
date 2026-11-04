@@ -35,6 +35,10 @@ export interface RodSpec {
   rest?: number;
   /** Length of the hook between the parent's arm end and this arm's balance point. */
   drop?: number;
+  /** The hook's length in the side view, if it should differ from drop × VIEW.side.hooks. */
+  sideDrop?: number;
+  /** Bows the arm's left side a little further down, sinking its end by this much. */
+  leftDip?: number;
   left: NodeSpec;
   right: NodeSpec;
 }
@@ -65,6 +69,7 @@ export const DESIGN: RodSpec = rod({
     tilt: 0.04,
     rest: 18,
     drop: 0.07,
+    sideDrop: 0.22, // the long hook under the top arm's left end, in the side view
     left: rod({
       len: 0.72,
       bend: 0.44,
@@ -124,8 +129,12 @@ export const PHYSICS = {
   drag: 0.25,
   /** Fixed physics timestep (s). */
   timestep: 1 / 120,
-  /** Random yaw offset (degrees) at load, so the mobile is already moving. */
-  startJitter: 8,
+  /**
+   * The opening pose, so the mobile never opens flat: the whole mobile turned `turn` degrees
+   * on its thread, each arm off its rest by `min`–`max` degrees (either way, never zero), and
+   * each already turning at up to `spin` degrees per second.
+   */
+  start: { turn: 10, min: 4, max: 9, spin: 3 },
   /**
    * How far (degrees) an arm may turn away from its resting angle before it meets a soft
    * stop, as if brushing a neighbor. The on-screen placement guarantees the text stays
@@ -164,6 +173,12 @@ export const BREEZE = {
   puffLife: 1.2,
   puffRadius: 0.3,
   /**
+   * The opening gust: this many seconds after the page opens, a puff `power` times a tap's
+   * strength hits the biggest sheet head-on, pushing it back toward the wall.
+   */
+  openingDelay: 0.6,
+  openingPower: 3,
+  /**
    * Gusts. Moving the cursor around the mobile builds up a gust (0–1) that stirs all of it,
    * not just the sheets under the cursor; it dies away once the cursor rests.
    *   gustBuild: gust gained per CSS px of cursor travel over the mobile.
@@ -185,9 +200,31 @@ export const VIEW = {
   /** Camera distance in world units. Larger means flatter perspective. */
   camera: 6.5,
   /** Largest scale (CSS px per world unit), for very large screens. */
-  maxScale: 330,
+  maxScale: 420,
   /** If the sculpture would be narrower than this (CSS px) beside the text, stack it above. */
-  minWidth: 340,
+  minWidth: 440,
+  /**
+   * Padding around the side view's space (CSS px, or a fraction of the window): the gap to
+   * the text column, the right edge, above the top pivot (the thread runs through it) and
+   * the bottom. Within that space the mobile grows as large as it fits.
+   */
+  sidePadding: { gap: 0.004, gapMin: 6, right: 8, top: 0.06, topMin: 28, topMax: 90, bottom: 16 },
+  /**
+   * Still while reading: scrolled down by `over` window heights or more, the mobile settles
+   * (at `settle` per second) into its display pose, every arm turned nearly flat to the
+   * viewer so it spreads to its full width, keeping `depth` of its resting turns; then it is
+   * held exactly still, letters included. Only a gust stronger than `wake` (0–1; a quick
+   * sweep of the cursor or a click) wakes it; scrolling back up frees it.
+   */
+  scrollCalm: { over: 0.06, settle: 2.4, depth: 0.6, wake: 0.3 },
+  /**
+   * The side view (mobile beside the text) uses DESIGN with its arms `narrow` times as long
+   * (so it draws larger in the same space, characters included), the same droop at the
+   * arm ends, and hooks `hooks` times as long (so it hangs a little lower). The top arm's
+   * left side also bows a little further down, its end by `topLeftDip`, without reaching
+   * further left.
+   */
+  side: { narrow: 0.85, hooks: 1.4, topLeftDip: 0.1 },
   /**
    * In wide layouts (mobile beside the text) there is room below, so the top arm's arc
    * droops up to wideArc times more than designed, as far as the window height allows.
@@ -210,7 +247,7 @@ export const ASCII = {
   /** Font size as a fraction of the drawing scale (CSS px per world unit), within limits. */
   fontScale: 0.058,
   minFont: 10,
-  maxFont: 13.5,
+  maxFont: 15,
   /** Row height as a multiple of the font size. */
   lineHeight: 1.1,
   /**
@@ -263,3 +300,21 @@ export const ASCII = {
   /** Opacity of the shadow dots. (Colors are the --mobile-* tokens in globals.css.) */
   shadowOpacity: 0.2,
 };
+
+/** The arrangement for the side view: DESIGN, narrower and hanging a little lower (VIEW.side). */
+function sideView(spec: RodSpec, top = true): RodSpec {
+  const { narrow, hooks, topLeftDip } = VIEW.side;
+  const node = (n: NodeSpec): NodeSpec => ("len" in n ? sideView(n, false) : n);
+  return {
+    ...spec,
+    leftDip: top ? topLeftDip : spec.leftDip,
+    len: spec.len * narrow,
+    // v = bend·u² + tilt·u: keep the ends' heights where they were on the shorter arm.
+    bend: spec.bend !== undefined ? spec.bend / (narrow * narrow) : undefined,
+    tilt: spec.tilt !== undefined ? spec.tilt / narrow : undefined,
+    drop: spec.sideDrop ?? (spec.drop ?? 0.07) * hooks,
+    left: node(spec.left),
+    right: node(spec.right),
+  };
+}
+export const DESIGN_SIDE: RodSpec = sideView(DESIGN);

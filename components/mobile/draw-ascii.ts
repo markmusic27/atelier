@@ -13,8 +13,9 @@
  *   - As a sheet turns, its terms swap in place, one at a time, for other terms of the same
  *     length: π(·|s) becomes Q(s,a), logπ(a|s) becomes E[G(s,a)]. The more it turns, the
  *     more change; in still air only the odd term changes.
- *   - Each arm is a row of characters spaced along its length, each one following the
- *     arm's slope on screen:  -  /  \  |  with an  o  at each joint. The strings (the
+ *   - Each arm is a dashed line of characters spaced along its length:  -  , turning into
+ *     /  \  on its steepest stretches and  |  where it runs nearly straight down, with an  o
+ *     at each joint. The strings (the
  *     thread from above and the hooks between levels) are  |  in their own, lighter color.
  *   - The wall shadow is the sheets' outlines projected onto the wall as faint characters,
  *     which also change as their sheet moves.
@@ -102,8 +103,10 @@ function inside(p: Float64Array, x: number, y: number) {
 }
 
 export function createAsciiRenderer(scene: Scene): Renderer {
-  const { mobile, ctx } = scene;
-  const { rods, shapes } = mobile;
+  const { ctx } = scene;
+  // The mobile on show can change with the layout; resize() picks up the current one.
+  let rods = scene.mobile.rods;
+  let shapes = scene.mobile.shapes;
   const rng = mulberry32(17);
 
   let sheetFont = "";
@@ -312,10 +315,14 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     };
   }
 
-  /** Swaps terms and shadow characters by how far the sheet turned, plus the drift. */
+  /**
+   * Swaps terms and shadow characters by how far the sheet turned, plus the drift; not at
+   * all while the mobile is held still for reading (scene.quiet).
+   */
   function update(g: SheetGrid, dt: number) {
     const theta = g.shape.rod.theta;
-    const amount = ASCII.swapPerRadian * Math.abs(theta - g.lastTheta) + ASCII.swapDrift * dt;
+    const live = Math.max(0, 1 - 2 * scene.quiet);
+    const amount = live * (ASCII.swapPerRadian * Math.abs(theta - g.lastTheta) + ASCII.swapDrift * dt);
     g.lastTheta = theta;
     if (amount <= 0) return;
     spend(g.face, g.slots, amount);
@@ -393,9 +400,12 @@ export function createAsciiRenderer(scene: Scene): Renderer {
   // ---------------------------------------------------------------------------------
   /** Character for a wire running in screen direction (dx, dy), judged in cell units. */
   function slopeGlyph(dx: number, dy: number) {
+    // Mostly dashes, so arcs read as dashed curves; only the steepest stretches (over about
+    // 50° on screen) turn into slashes, and nearly vertical ones into a bar. (The angle is
+    // judged in cell units: a cell is about twice as tall as it is wide.)
     const angle = Math.atan2(Math.abs(dy / ch), Math.abs(dx / cw));
-    if (angle > 1.18) return "|";
-    if (angle > 0.42) return dx * dy > 0 ? "\\" : "/";
+    if (angle > 1.3) return "|";
+    if (angle > 0.56) return dx * dy > 0 ? "\\" : "/";
     return "-";
   }
 
@@ -416,17 +426,32 @@ export function createAsciiRenderer(scene: Scene): Renderer {
       for (let i = 0; i < n; i++) glyphAt("|", r.x, top + ((i + 0.5) / n) * r.drop, r.z, "string");
     }
 
-    // The arm.
-    const n = Math.max(2, Math.round(r.len / du));
-    const step = r.len / n;
-    for (let i = 0; i < n; i++) {
-      const u = -r.a + (i + 0.5) * step;
-      if (Math.abs(u) < 0.6 * step) continue; // leave room for the loop at the pivot
-      scene.project(r.x + (u - step / 2) * r.dx, r.y + arm(r, u - step / 2), r.z + (u - step / 2) * r.dz);
-      const x0 = scene.PX;
-      const y0 = scene.PY;
-      scene.project(r.x + (u + step / 2) * r.dx, r.y + arm(r, u + step / 2), r.z + (u + step / 2) * r.dz);
-      glyphAt(slopeGlyph(scene.PX - x0, scene.PY - y0), r.x + u * r.dx, r.y + arm(r, u), r.z + u * r.dz);
+    // The arm: a character each time the wire has run one cell along its length (so steep
+    // stems stay as continuous as flat arms), following its slope on screen.
+    const steps = Math.max(24, Math.ceil(r.len / du) * 8);
+    let run = 0.5; // the first character sits half a cell in from the end
+    let pu = -r.a;
+    let pv = arm(r, pu);
+    let gu = pu; // where the previous character went, to read the slope from
+    let gv = pv;
+    for (let i = 1; i <= steps; i++) {
+      const u = -r.a + (r.len * i) / steps;
+      const v = arm(r, u);
+      run += Math.hypot((u - pu) / du, (v - pv) / dv);
+      pu = u;
+      pv = v;
+      if (run < 1) continue;
+      run -= 1;
+      if (Math.hypot(u / du, v / dv) > 0.6) {
+        // (leaving room for the loop at the pivot)
+        scene.project(r.x + gu * r.dx, r.y + gv, r.z + gu * r.dz);
+        const x0 = scene.PX;
+        const y0 = scene.PY;
+        scene.project(r.x + u * r.dx, r.y + v, r.z + u * r.dz);
+        glyphAt(slopeGlyph(scene.PX - x0, scene.PY - y0), r.x + u * r.dx, r.y + v, r.z + u * r.dz);
+      }
+      gu = u;
+      gv = v;
     }
 
     glyphAt("o", r.x, r.y, r.z);
@@ -444,6 +469,8 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     ch = fontPx * ASCII.lineHeight;
     du = cw / S;
     dv = ch / S;
+    rods = scene.mobile.rods;
+    shapes = scene.mobile.shapes;
     grids = shapes.map(buildGrid);
     items = [...rods.map((rod) => ({ z: 0, rod })), ...grids.map((grid) => ({ z: 0, grid }))];
     readColors();
