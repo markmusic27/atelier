@@ -204,12 +204,12 @@ export const VIEW = {
   /** If the sculpture would be narrower than this (CSS px) beside the text, stack it above. */
   minWidth: 440,
   /**
-   * The header view (mobile above the text). On phone-width screens it shows `phone.design`
+   * The header view (mobile above the text). Below `phone.below` px wide it shows `phone.design`
    * ("side" for the side view's arrangement, with its deeper droop and longer hooks, or
    * "compact" for DESIGN as is) on a `phone.thread` px thread; on wider windows that are too
    * narrow for the side view, it shows the compact DESIGN on a `thread` px thread.
    */
-  header: { thread: 40, phone: { design: "side" as "side" | "compact", thread: 64 } },
+  header: { thread: 40, phone: { below: 600, design: "side" as "side" | "compact", thread: 64 } },
   /**
    * Padding around the side view's space (CSS px, or a fraction of the window): the gap to
    * the text column, the right edge, above the top pivot (the thread runs through it) and

@@ -189,6 +189,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   // cross into the text. If that space is too small, stack it above the text.
   // -----------------------------------------------------------------------------------
   const narrow = matchMedia("(max-width: 767px)");
+  const phoneWidth = matchMedia(`(max-width: ${VIEW.header.phone.below - 0.02}px)`);
 
   function layout() {
     const vw = window.innerWidth;
@@ -227,7 +228,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     if (stacked) {
       if (!narrow.matches) html.setAttribute("data-stacked", "");
       // Phone-width screens get the side view's deeper look; wider windows the compact one.
-      const phone = narrow.matches;
+      const phone = phoneWidth.matches;
       scene.layout = phone ? "phone" : "header";
       const sideLook = phone && VIEW.header.phone.design === "side";
       use(sideLook ? wide : compact);
@@ -557,6 +558,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   window.addEventListener("mousedown", onMouseDown);
   html.addEventListener("pointerleave", onLeave);
   narrow.addEventListener("change", layout);
+  phoneWidth.addEventListener("change", layout);
   reduceMotion.addEventListener("change", onMotionPref);
   colorScheme.addEventListener("change", onScheme);
 
@@ -570,6 +572,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     window.removeEventListener("mousedown", onMouseDown);
     html.removeEventListener("pointerleave", onLeave);
     narrow.removeEventListener("change", layout);
+    phoneWidth.removeEventListener("change", layout);
     reduceMotion.removeEventListener("change", onMotionPref);
     colorScheme.removeEventListener("change", onScheme);
     html.removeAttribute("data-stacked");
