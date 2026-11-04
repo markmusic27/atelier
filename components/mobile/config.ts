@@ -216,7 +216,7 @@ export const VIEW = {
    * held exactly still, letters included. Only a gust stronger than `wake` (0–1; a quick
    * sweep of the cursor or a click) wakes it; scrolling back up frees it.
    */
-  scrollCalm: { over: 0.06, settle: 2.4, depth: 0.6, wake: 0.3 },
+  scrollCalm: { over: 0.03, settle: 2.4, depth: 0.6, wake: 0.3 },
   /**
    * The side view (mobile beside the text) uses DESIGN with its arms `narrow` times as long
    * (so it draws larger in the same space, characters included), the same droop at the
