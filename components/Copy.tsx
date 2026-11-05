@@ -24,7 +24,7 @@ const NOTES: ReactNode[] = [
     manipulation tasks (<Link href="https://research.nvidia.com/labs/srl/projects/astranomy/">Astranomy</Link>).
   </>,
   <>
-    Kyle Vedder argues robots don’t need dexterous hands: bimanual parallel-jaw grippers handle most tasks, and for
+    Kyle Vedder from Pi argues robots don’t need dexterous hands: bimanual parallel-jaw grippers handle most tasks, and for
     the rest, adding an arm beats adding end-effector complexity (
     <Link href="https://vedder.io/misc/the_case_against_human_hands.html">Vedder</Link>). We agree with his
     reasoning but not his conclusion. Robots can swap end effectors, as Generalist does by pretraining one model
