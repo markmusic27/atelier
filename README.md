@@ -6,53 +6,61 @@
 
 *a-tə-lye · proper noun.* A research workshop for people exploring unconventional ideas in robot learning.
 
-This is the homepage for [atelierlab.io](https://atelierlab.io): a single quiet page of text, with a
-sculpture hanging beside it.
+We're a small group of engineers and roboticists exploring ideas that are newly within reach. Most of us
+are Stanford researchers who also work in labs like [ILIAD](https://iliad.stanford.edu/),
+[REAL](https://real.stanford.edu/), and [Hazy Research](https://hazyresearch.stanford.edu/).
 
-## The sculpture
+## Why now
 
-The mobile is after Alexander Calder, inspired by his
-[*Model for East Building Mobile*](https://www.nga.gov/artworks/55697-model-east-building-mobile) (1972)
-at the National Gallery of Art. It is not an animation but a small simulation of a real one:
+The economics and the possibilities of robotics research are shifting. Before an actual experiment, it
+used to take weeks to integrate components from several vendors, calibrate poses, and fabricate a test
+rig. Frontier AI has collapsed the cost of that software and is starting to do the same for parts of
+hardware. Frontier models are also showing strong spatial reasoning, enough to generate realistic 3D
+environments and even actuate robots directly, and we think much of the field still underestimates what
+they can unlock when used creatively. Together, these make testing a strange idea far cheaper than it was
+even a few months ago.
 
-- **Balanced.** Each wire arm hangs from a hook at its true balance point, computed from the
-  masses below it, so the arrangement can be edited freely and always hangs level.
-- **Moving.** Every arm twists on its hook as a torsional pendulum, pushed by a slow, swirling
-  air current and damped by the drag of its sheets. Moving the cursor across it stirs a breeze;
-  clicks send puffs that build into a gust. Firm limits keep it from ever swinging into the text.
-- **Printed.** It is drawn in characters on a canvas. Each sheet is a grid of reinforcement-learning
-  notation, `π(a|s)`, `E[Σγ^tr_t]`, `θ←θ+α`, that swaps term for term as the sheet turns, and casts a
-  faint shadow of dots on the wall behind it.
-- **Still while reading.** Scroll down and it settles into an open pose and holds perfectly still,
-  letters included, until someone stirs it again.
+## The name
 
-## Running it
+In nineteenth-century Paris, ateliers were small workshops where artists and architects learned and
+created with one another outside of the academy. Much of the era's most important work came out of
+independent ateliers like the Académie Suisse, where Monet and Cézanne trained. We think robotics needs
+the same thing now. The point is not to commercialize our work, but to provide a space with resources and
+other people working seriously on hard problems.
+
+## Early directions
+
+- **Unexplored end effectors and dexterous tool use.** The field has mostly converged on parallel-jaw
+  grippers and dexterous hands. The space of possible bodies, and of ways to collect data for them, is
+  much larger than what's been tried.
+- **Automating the [novelty pump](https://vedder.io/misc/novelty_pump.html).** A robot policy only
+  improves from data that shows it something new, and finding that data today is manual work that doesn't
+  compound. We think frontier models can take over parts of this loop, from spotting failures to
+  generating new scenarios, toward a true data flywheel where every hour of deployment makes the policy
+  better.
+- **Embodied alignment.** Making sure robots act in ways that follow our intent, including the parts we
+  don't think to specify.
+
+## Get in touch
+
+If you have a bet you want to test and Atelier sounds appealing, we'd like to hear from you. You don't
+need to be at Stanford or in a lab. Labs and companies interested in sponsoring research or learning more
+are welcome too. Email us at [mmusic@stanford.edu](mailto:mmusic@stanford.edu).
+
+## This repository
+
+Atelier's work will live here. For now, it holds the landing page at [atelierlab.io](https://atelierlab.io),
+a Next.js site: one column of text beside an ASCII-art sculpture after Alexander Calder's
+[*Model for East Building Mobile*](https://www.nga.gov/artworks/55697-model-east-building-mobile) (1972).
+The sculpture is a small physics simulation of a balanced mobile, printed in reinforcement-learning
+notation, that drifts in a slow air current and stirs when the cursor moves across it.
 
 ```bash
 npm install
 npm run dev     # http://localhost:3000
-npm run build
 ```
 
-## How it is put together
-
-| File | What it holds |
-| --- | --- |
-| `components/Copy.tsx` | The page text and its footnotes. |
-| `app/layout.tsx` | Title, description and share image metadata. |
-| `app/globals.css` | Fonts, the light and dark palettes (including the sculpture's `--mobile-*` colors), and placement. |
-| `components/mobile/config.ts` | Every tuning knob: the arrangement of arms and sheets, periods, damping, air, breeze and gusts, swing limits, camera, layout, and the ASCII look. |
-| `components/mobile/physics.ts` | Balance points, inertia and the simulation. |
-| `components/mobile/shapes.ts` | The hand-cut sheet outlines. |
-| `components/mobile/engine.ts` | Camera, placement beside or above the text, the air field, input and the animation loop. |
-| `components/mobile/draw-ascii.ts` | Prints the sculpture in characters. |
-| `app/thumbnail/page.tsx` | The sculpture alone and still at 1200 × 630, which `app/opengraph-image.png` is captured from. |
-
-The sculpture hangs to the right of the text on wide screens and above it on narrow ones,
-always sized so that no reachable pose can cross into the text.
-
-## Type
-
-The page is set in FK Roman Standard, by Florian Karsten Typefaces, used only from a local installation (the trial license does not cover serving it), and falls back to Times New
-Roman. The sculpture is printed in CMU Typewriter, from the
-[`computer-modern`](https://www.npmjs.com/package/computer-modern) package.
+The text is in `components/Copy.tsx`, the title and share image in `app/layout.tsx`, the colors in
+`app/globals.css`, and the sculpture in `components/mobile/` (every tuning knob is in `config.ts`). The
+page is set in FK Roman Standard where it's installed locally (its trial license doesn't cover serving it)
+and in Times New Roman otherwise. The sculpture is printed in CMU Typewriter.
