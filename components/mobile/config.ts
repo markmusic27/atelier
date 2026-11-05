@@ -54,7 +54,7 @@ const sheet = (shape: ShapeKind, size: number, color: ColorKey, extra: Partial<S
 });
 
 /*
- * The arrangement. Mostly black and red-orange, with a single blue.
+ * The arrangement. Mostly black and blue, with a single red.
  * Add or remove arms freely: balance points, inertia and springs are all derived.
  */
 export const DESIGN: RodSpec = rod({
@@ -62,7 +62,7 @@ export const DESIGN: RodSpec = rod({
   bend: 0.24,
   tilt: -0.02,
   rest: 0,
-  // Left: a black cascade arcing down and outward, ending in the blue.
+  // Left: a black cascade arcing down and outward, ending in the red.
   left: rod({
     len: 1.0,
     bend: 0.34,
@@ -81,13 +81,13 @@ export const DESIGN: RodSpec = rod({
         bend: 0.55,
         rest: 30,
         drop: 0.06,
-        left: sheet("fin", 0.22, "blue", { rot: 8 }),
+        left: sheet("fin", 0.22, "red", { rot: 8 }),
         right: sheet("boomerang", 0.17, "ink", { rot: 18 }),
       }),
     }),
     right: sheet("boomerang", 0.32, "ink", { rot: 10 }),
   }),
-  // Right: red petals growing toward the big leaf that counterweights everything.
+  // Right: blue petals growing toward the big leaf that counterweights everything.
   right: rod({
     len: 0.92,
     bend: 0.32,
@@ -104,12 +104,12 @@ export const DESIGN: RodSpec = rod({
         bend: 0.6,
         rest: -28,
         drop: 0.05,
-        left: sheet("petal", 0.15, "red", { rot: -10 }),
+        left: sheet("petal", 0.15, "blue", { rot: -10 }),
         right: sheet("blade", 0.18, "ink", { rot: 4 }),
       }),
-      right: sheet("petal", 0.24, "red", { rot: 12 }),
+      right: sheet("petal", 0.24, "blue", { rot: 12 }),
     }),
-    right: sheet("leaf", 0.42, "red", { rot: 8 }),
+    right: sheet("leaf", 0.42, "blue", { rot: 8 }),
   }),
 });
 
@@ -276,7 +276,7 @@ export const VIEW = {
   wideArcLower: 0.29,
   shadow: {
     /** Distance of the wall behind the thread, as a multiple of the mobile's radius. */
-    wall: 0.9,
+    wall: 1.3,
     /** Direction of the light rays (x right, y down), per unit of depth toward the wall. */
     light: [0.07, 0.11] as const,
   },
@@ -325,16 +325,20 @@ export const ASCII = {
   shadowGlyphs: [".", "·", "'", ",", ":"],
   /** Weight of the sheets' characters (CMU Typewriter has 400 and 700); bold reads more solid. */
   sheetWeight: 700,
+  /**
+   * Thickens the sheets' characters past the font's heaviest weight: each is also traced with
+   * an outline of its own color this wide, as a fraction of the font size (0 = none).
+   */
+  sheetOutline: 0.02,
   /** Partly covered cells along a sheet's edge are shaded with these, from faint to dense. */
   edgeRamp: ".,:;",
   /** Cells at least this covered print terms; less covered ones get edge shading. */
   solidCoverage: 0.6,
   /** Cells with less sheet coverage than this stay empty. */
   minCoverage: 0.12,
-  /** How much paler a sheet gets as it turns away from the light (0–1). */
-  turnFade: 0.06,
   /**
-   * Depth: parts farther from the viewer are printed closer to the background color.
+   * Depth: arms and strings farther from the viewer are printed closer to the background
+   * color (sheets keep their exact colors).
    * depthFade is the most they fade (0–1; --mobile-depth-fade in globals.css overrides it
    * per color scheme); depthRange is the depth (world units, either side of the thread)
    * over which the fade runs from none to full.
@@ -342,7 +346,13 @@ export const ASCII = {
   depthFade: 0.45,
   depthRange: 0.7,
   /** Opacity of the shadow dots. (Colors are the --mobile-* tokens in globals.css.) */
-  shadowOpacity: 0.2,
+  shadowOpacity: 0.3,
+  /**
+   * Each sheet's shadow is drawn `shadowSpread` times its size (about its center), with only
+   * `shadowKeep` of its characters, so it falls soft and diffuse around the sheet.
+   */
+  shadowSpread: 1.35,
+  shadowKeep: 0.75,
 };
 
 /** The arrangement for the side view: DESIGN, narrower and hanging a little lower (VIEW.side). */

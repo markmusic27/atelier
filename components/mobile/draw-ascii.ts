@@ -31,9 +31,6 @@ import type { PaletteKey, Renderer, Scene } from "./engine";
 import { arm, type Rod, type Shape } from "./physics";
 import { mulberry32 } from "./shapes";
 
-// Light for the sheets' shading, as a horizontal direction toward the light.
-const LX = -0.5;
-const LZ = 0.87;
 /** Narrowest a sheet's characters get when it is edge-on, as a fraction of full width. */
 const MIN_SQUEEZE = 0.06;
 
@@ -111,6 +108,7 @@ export function createAsciiRenderer(scene: Scene): Renderer {
 
   let sheetFont = "";
   let wireFont = "";
+  let outline = 0; // width of the sheets' extra outline (ASCII.sheetOutline), in font px
   let cw = 6; // character cell, CSS px
   let ch = 11;
   let du = 0.03; // the same cell in world units, at the scale of the thread's plane
@@ -151,6 +149,19 @@ export function createAsciiRenderer(scene: Scene): Renderer {
       s = `rgb(${Math.round(c[0] + (p[0] - c[0]) * t)},${Math.round(c[1] + (p[1] - c[1]) * t)},${Math.round(
         c[2] + (p[2] - c[2]) * t,
       )})`;
+      colorCache.set(id, s);
+    }
+    return s;
+  }
+
+  /** A sheet's backing: its color at exactly --mobile-tint opacity over the page. */
+  function tinted(key: PaletteKey) {
+    const id = key + "@";
+    let s = colorCache.get(id);
+    if (!s) {
+      const c = scene.palette[key];
+      const p = scene.palette.paper;
+      s = `rgb(${[0, 1, 2].map((i) => Math.round(p[i] + (c[i] - p[i]) * tint)).join(",")})`;
       colorCache.set(id, s);
     }
     return s;
@@ -335,7 +346,7 @@ export function createAsciiRenderer(scene: Scene): Renderer {
    * distance, so one affine map per sheet places every character where that bit of sheet
    * really is.
    */
-  function printGrid(g: SheetGrid, proj: Scene["project"], rows: Row[], cells: string[]) {
+  function printGrid(g: SheetGrid, proj: Scene["project"], rows: Row[], cells: string[], spread = 1, stroke = 0) {
     const { S, dpr } = scene;
     const r = g.shape.rod;
     const h = 0.01;
@@ -357,12 +368,14 @@ export function createAsciiRenderer(scene: Scene): Renderer {
       ay = -ay;
     }
     ax = Math.max(ax, MIN_SQUEEZE * S); // keep a sliver when exactly edge-on
-    ctx.setTransform((dpr * ax) / S, (dpr * ay) / S, (dpr * bx) / S, (dpr * by) / S, dpr * px, dpr * py);
+    const k = (dpr * spread) / S; // (spread: printed larger about the grid's center)
+    ctx.setTransform(k * ax, k * ay, k * bx, k * by, dpr * px, dpr * py);
     for (const row of rows) {
       let text = "";
       if (back) for (let i = row.last; i >= row.first; i--) text += cells[i];
       else for (let i = row.first; i <= row.last; i++) text += cells[i];
       ctx.fillText(text, back ? row.xBack : row.x, row.y);
+      if (stroke) ctx.strokeText(text, back ? row.xBack : row.x, row.y);
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
@@ -384,15 +397,15 @@ export function createAsciiRenderer(scene: Scene): Renderer {
 
   function drawSheet(g: SheetGrid) {
     const s = g.shape;
-    const r = s.rod;
-    const facing = Math.abs(-r.dz * LX + r.dx * LZ);
-    const fade = clamp(depthFade(s.z) + ASCII.turnFade * (1 - facing), 0, 1);
-    // The backing: the page color tinted with the sheet's color, always at full strength.
-    backing(s, faded(s.color, 1 - tint));
+    // The backing: the sheet's color at --mobile-tint opacity over the page. The characters
+    // print in the exact color, however far back or turned the sheet is.
+    backing(s, tinted(s.color));
     ctx.font = sheetFont;
-    ctx.fillStyle = faded(s.color, fade);
+    ctx.fillStyle = ctx.strokeStyle = faded(s.color, 0);
+    ctx.lineWidth = outline;
+    ctx.lineJoin = "round";
     ctx.textAlign = "left";
-    printGrid(g, scene.project, g.rows, g.face);
+    printGrid(g, scene.project, g.rows, g.face, 1, outline);
   }
 
   // ---------------------------------------------------------------------------------
@@ -467,6 +480,7 @@ export function createAsciiRenderer(scene: Scene): Renderer {
         ? VIEW.thumbnail.font
         : clamp(Math.round(S * ASCII.fontScale * 2) / 2, minFont, ASCII.maxFont);
     sheetFont = `${ASCII.sheetWeight} ${fontPx}px ${ASCII.font}`;
+    outline = fontPx * ASCII.sheetOutline;
     wireFont = `${fontPx}px ${ASCII.font}`;
     ctx.font = sheetFont;
     cw = ctx.measureText("M").width;
@@ -488,10 +502,10 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     }
   }
 
-  /** A copy of a sheet's shadow cells with only VIEW.thumbnail.shadowKeep of them printed. */
-  function sparse(cells: string[]) {
+  /** A copy of a sheet's shadow cells with only `share` of them printed (the same ones every frame). */
+  function sparse(cells: string[], share: number) {
     const keep = mulberry32(cells.length);
-    return cells.map((c) => (keep() < VIEW.thumbnail.shadowKeep ? c : " "));
+    return cells.map((c) => (keep() < share ? c : " "));
   }
 
   /** Faint shadow characters in a few of the background's cells (VIEW.thumbnail.noise). */
@@ -522,7 +536,8 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     ctx.globalAlpha = thumb ? VIEW.thumbnail.shadow : ASCII.shadowOpacity;
     if (thumb) scatterNoise();
     ctx.textAlign = "left";
-    for (const g of grids) printGrid(g, scene.projectShadow, g.shadowRows, thumb ? sparse(g.shade) : g.shade);
+    const keep = thumb ? VIEW.thumbnail.shadowKeep : ASCII.shadowKeep;
+    for (const g of grids) printGrid(g, scene.projectShadow, g.shadowRows, sparse(g.shade, keep), ASCII.shadowSpread);
 
     // 2. The thread, rising out of view.
     ctx.font = wireFont;
