@@ -242,9 +242,11 @@ export const VIEW = {
    * further left. It is drawn `scale` times as large as its space strictly fits (about its
    * center): that fit allows for every arm at its limit at once, which real poses never
    * come near, so a little extra still keeps clear of the text. It is then moved left by
-   * `nudge` of its space's width.
+   * `nudge` of its space's width. As the page scrolls down (over its first `dropOver` window
+   * heights), it lowers by `drop` of the window height, the top string lengthening, as far
+   * as the room below allows.
    */
-  side: { narrow: 0.85, hooks: 1.4, topLeftDip: 0.05, scale: 1.03, nudge: 0.02 },
+  side: { narrow: 0.85, hooks: 1.4, topLeftDip: 0.05, scale: 1.03, nudge: 0.02, drop: 0.05, dropOver: 0.8 },
   /**
    * In wide layouts (mobile beside the text) there is room below, so the top arm's arc
    * droops up to wideArc times more than designed, as far as the window height allows.

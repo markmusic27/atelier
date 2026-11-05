@@ -104,6 +104,11 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   let wallZ = 0; // the wall behind the mobile, for its shadow
   let camY = 0; // the camera's height, mid-mobile
   let bottom = 0; // lowest possible point on screen, below the pivot (world units)
+  // The side view lowers a little as the page scrolls (VIEW.side.drop): where its top pivot
+  // starts, how far it may go (CSS px), and how far it has gone.
+  let sideTop = 0;
+  let sideDrop = 0;
+  let dropped = 0;
 
   /** The artwork's left and right edges at rest (world units, with perspective). */
   function restExtent(m: Mobile) {
@@ -222,7 +227,10 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
         if (s * bottom > room) setArcs(1);
         scene.S = s;
         scene.ox = left + s * reach.left + (avail - s * span) / 2 - avail * VIEW.side.nudge;
-        scene.oy = top;
+        sideTop = top;
+        sideDrop = Math.max(0, Math.min(vh * VIEW.side.drop, room - s * bottom));
+        dropped = Math.min(dropped, sideDrop);
+        scene.oy = top + dropped;
       }
     }
 
@@ -484,6 +492,13 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     if (!visible) return;
     if (!opened && simT >= BREEZE.openingDelay) openingGust();
     updatePointer(dt);
+    if (scene.layout === "side") {
+      // Lower with the scroll, easing after it so the move stays gentle.
+      const t = clamp(window.scrollY / (VIEW.side.dropOver * window.innerHeight), 0, 1);
+      const want = sideDrop * t * t * (3 - 2 * t);
+      dropped += (want - dropped) * (1 - Math.exp(-dt / 0.25));
+      scene.oy = sideTop + dropped;
+    }
     const calm = VIEW.scrollCalm;
     const scrolled = clamp(window.scrollY / (calm.over * window.innerHeight), 0, 1);
     const target = gust > calm.wake ? 0 : scrolled; // only a deliberate gust wakes it

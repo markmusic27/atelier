@@ -2,8 +2,21 @@
 
 import type { ReactNode } from "react";
 
-/* Footnotes, in order: the text for each numbered marker (<Ref n={…} />) in the copy. */
-const NOTES: ReactNode[] = ["Note to come.", "Note to come.", "Note to come.", "Note to come."];
+/* Footnotes, numbered from 0: note 0 is about the sculpture (no marker in the text); the rest go
+   with the markers (<Ref n={…} />) in the copy. */
+const NOTES: ReactNode[] = [
+  <>
+    The sculpture on this page is after Alexander Calder, inspired by his{" "}
+    <Link href="https://www.nga.gov/artworks/55697-model-east-building-mobile">
+      <i>Model for East Building Mobile</i>
+    </Link>{" "}
+    (1972) at the National Gallery of Art.
+  </>,
+  "Note to come.",
+  "Note to come.",
+  "Note to come.",
+  "Note to come.",
+];
 
 const linkClass =
   "underline decoration-current/30 underline-offset-[0.18em] transition-colors duration-120 ease-out hover:decoration-current";
@@ -120,24 +133,29 @@ export default function Copy() {
 
           <p>
             If you have a bet you want to test and Atelier sounds appealing to you, we’d like to hear from you.
-            You don’t need to be at Stanford or in a lab. Reach out at{" "}
+            You don’t need to be at Stanford or in a lab. Email us at{" "}
             <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
           </p>
 
           <p>
             If you’re a lab or company interested in sponsoring research or learning more about what we’re up
-            to, reach out at <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
+            to, email us at <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
           </p>
 
           <footer className="mt-12">
             <hr className="mb-4 w-14 border-0 border-t border-current opacity-30" />
             {NOTES.map((note, i) => (
-              <p key={i} id={`fn${i + 1}`} className="scroll-mt-8">
-                <sup className="mr-[0.25em] text-[0.75em]">{i + 1}</sup>
-                {note}{" "}
-                <a href={`#fnref${i + 1}`} aria-label="Back to text" className="no-underline opacity-70 transition-opacity duration-120 ease-out hover:opacity-100">
-                  ↩&#xFE0E;
-                </a>
+              <p key={i} id={`fn${i}`} className="scroll-mt-8">
+                <sup className="mr-[0.25em] text-[0.75em]">{i}</sup>
+                {note}
+                {i > 0 && (
+                  <>
+                    {" "}
+                    <a href={`#fnref${i}`} aria-label="Back to text" className="no-underline opacity-70 transition-opacity duration-120 ease-out hover:opacity-100">
+                      ↩&#xFE0E;
+                    </a>
+                  </>
+                )}
               </p>
             ))}
           </footer>
