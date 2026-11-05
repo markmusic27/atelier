@@ -5,7 +5,7 @@
  * whole sculpture to fit), time is seconds, angles in DESIGN are degrees.
  */
 
-export type ColorKey = "ink" | "red" | "blue";
+export type ColorKey = "ink" | "red" | "orange";
 export type ShapeKind = "leaf" | "petal" | "boomerang" | "blade" | "fin";
 
 /** A flat sheet-metal shape fixed to the end of an arm. */
@@ -54,7 +54,7 @@ const sheet = (shape: ShapeKind, size: number, color: ColorKey, extra: Partial<S
 });
 
 /*
- * The arrangement. Mostly black and blue, with two red.
+ * The arrangement. Mostly black and orange, with two red.
  * Add or remove arms freely: balance points, inertia and springs are all derived.
  */
 export const DESIGN: RodSpec = rod({
@@ -104,12 +104,12 @@ export const DESIGN: RodSpec = rod({
         bend: 0.6,
         rest: -28,
         drop: 0.05,
-        left: sheet("petal", 0.15, "blue", { rot: -10 }),
+        left: sheet("petal", 0.15, "orange", { rot: -10 }),
         right: sheet("blade", 0.18, "ink", { rot: 4 }),
       }),
       right: sheet("petal", 0.24, "red", { rot: 12 }),
     }),
-    right: sheet("leaf", 0.42, "blue", { rot: 8 }),
+    right: sheet("leaf", 0.42, "orange", { rot: 8 }),
   }),
 });
 

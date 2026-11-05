@@ -103,12 +103,12 @@ html.fk body {
   --paper: #ffffff;
   --ink: #1d1d1b;
 
-  /* The arms, and the sheets' three text colors: blue (the main one), red, and black (cream in
-     dark mode). */
+  /* The arms, and the sheets' three text colors: orange (the main one), red, and black (cream
+     in dark mode). */
   --mobile-wire: #2b2a27;
   --mobile-ink: #121211;
   --mobile-red: #e6191e;
-  --mobile-blue: #ff5714;
+  --mobile-orange: #ff5714;
   /* The strings (the thread and the hooks), set apart from the arms by color. */
   --mobile-string: #a8a39a;
   /* The page background, for the canvas (follows --paper in dark mode too). */
@@ -130,7 +130,7 @@ html.fk body {
     --mobile-wire: #b5afa4;
     --mobile-ink: #ece6da;
     --mobile-red: #ff4545;
-    --mobile-blue: #ff7a2e;
+    --mobile-orange: #ff7a2e;
     --mobile-string: #45423e;
     --mobile-tint: 0.17;
     --mobile-depth-fade: 0.45;

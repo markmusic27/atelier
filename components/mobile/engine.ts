@@ -191,8 +191,8 @@ export function runMobile(
     },
     palette: {
       ink: [18, 18, 17],
-      red: [255, 45, 0],
-      blue: [0, 51, 255],
+      red: [230, 25, 30],
+      orange: [255, 87, 20],
       wire: [43, 42, 39],
       string: [168, 163, 154],
       paper: [255, 255, 255],
