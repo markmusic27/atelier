@@ -4,6 +4,7 @@ import "./globals.css";
 
 const description = "A workshop dedicated to asymmetric research bets in robot learning.";
 // The title link previews show (iMessage shows only this, under the image); the tab says "Atelier".
+// No og:site_name: iMessage cuts a leading "<site name>:" off the title.
 const shareTitle = "Atelier: a workshop for asymmetric bets in robotics";
 
 // The share image is app/opengraph-image.png (and twitter-image.png), a capture of app/thumbnail.
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://atelierlab.io"),
   title: "Atelier",
   description,
-  openGraph: { title: shareTitle, description, url: "/", siteName: "Atelier", type: "website" },
+  openGraph: { title: shareTitle, description, url: "/", type: "website" },
   twitter: { card: "summary_large_image", title: shareTitle, description },
 };
 
