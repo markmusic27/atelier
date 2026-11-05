@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 
 /* Footnotes, in order: the text for each numbered marker (<Ref n={…} />) in the copy. */
-const NOTES: ReactNode[] = [];
+const NOTES: ReactNode[] = ["Note to come.", "Note to come.", "Note to come.", "Note to come."];
 
-const linkClass = "underline decoration-current/30 underline-offset-[0.18em] hover:decoration-current";
+const linkClass =
+  "underline decoration-current/30 underline-offset-[0.18em] transition-colors duration-120 ease-out hover:decoration-current";
 
 function Link({ href, children }: { href: string; children: ReactNode }) {
   return (
@@ -15,17 +16,18 @@ function Link({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-/** A footnote marker; it links to its note once that note is in NOTES. */
+/** A footnote marker, linking to its note at the bottom. */
 function Ref({ n }: { n: number }) {
   return (
     <sup className="ml-[0.08em] text-[0.68em] leading-none">
-      {NOTES[n - 1] ? (
-        <a id={`fnref${n}`} href={`#fn${n}`} aria-label={`Footnote ${n}`} className="scroll-mt-8 px-[0.1em] no-underline">
-          {n}
-        </a>
-      ) : (
-        n
-      )}
+      <a
+        id={`fnref${n}`}
+        href={`#fn${n}`}
+        aria-label={`Footnote ${n}`}
+        className="scroll-mt-8 px-[0.1em] underline decoration-transparent underline-offset-[0.18em] transition duration-120 ease-out hover:decoration-current hover:opacity-60"
+      >
+        {n}
+      </a>
     </sup>
   );
 }
@@ -81,8 +83,8 @@ export default function Copy() {
           <p>
             The name comes from nineteenth-century Paris, where ateliers were small workshops for artists and
             architects to learn and create with one another outside of the academy. Much of the era’s most
-            important work came out of independent ateliers like the Académie Suisse, where Monet, Cézanne, and
-            Pissarro trained.
+            important work came out of independent ateliers like the Académie Suisse, where Monet and Cézanne
+            trained.
           </p>
 
           <p>
@@ -111,6 +113,7 @@ export default function Copy() {
           <p>
             The third is embodied alignment: making sure robots act in ways that follow our intent, including the
             parts we don’t think to specify.
+            <Ref n={4} />
           </p>
 
           <Heading>Reach out</Heading>
@@ -126,20 +129,18 @@ export default function Copy() {
             to, reach out at <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
           </p>
 
-          {NOTES.length > 0 && (
-            <footer className="mt-12">
-              <hr className="mb-4 w-14 border-0 border-t border-current opacity-30" />
-              {NOTES.map((note, i) => (
-                <p key={i} id={`fn${i + 1}`} className="scroll-mt-8">
-                  <sup className="mr-[0.25em] text-[0.75em]">{i + 1}</sup>
-                  {note}{" "}
-                  <a href={`#fnref${i + 1}`} aria-label="Back to text" className="no-underline opacity-70 hover:opacity-100">
-                    ↩&#xFE0E;
-                  </a>
-                </p>
-              ))}
-            </footer>
-          )}
+          <footer className="mt-12">
+            <hr className="mb-4 w-14 border-0 border-t border-current opacity-30" />
+            {NOTES.map((note, i) => (
+              <p key={i} id={`fn${i + 1}`} className="scroll-mt-8">
+                <sup className="mr-[0.25em] text-[0.75em]">{i + 1}</sup>
+                {note}{" "}
+                <a href={`#fnref${i + 1}`} aria-label="Back to text" className="no-underline opacity-70 transition-opacity duration-120 ease-out hover:opacity-100">
+                  ↩&#xFE0E;
+                </a>
+              </p>
+            ))}
+          </footer>
         </div>
       </article>
     </main>
