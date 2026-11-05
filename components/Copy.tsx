@@ -145,8 +145,8 @@ export default function Copy() {
           </p>
 
           <p>
-            The third is embodied alignment: making sure robots act in ways that follow our intent, including the
-            parts we don’t think to specify.
+            The third is what we call embodied alignment: making sure robots act in ways that follow our intent,
+            including the parts we don’t think to specify.
             <Ref n={4} />
           </p>
 
