@@ -329,7 +329,7 @@ export const ASCII = {
    * Thickens the sheets' characters past the font's heaviest weight: each is also traced with
    * an outline of its own color this wide, as a fraction of the font size (0 = none).
    */
-  sheetOutline: 0.02,
+  sheetOutline: 0.01,
   /** Partly covered cells along a sheet's edge are shaded with these, from faint to dense. */
   edgeRamp: ".,:;",
   /** Cells at least this covered print terms; less covered ones get edge shading. */
