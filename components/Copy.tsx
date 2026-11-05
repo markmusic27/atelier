@@ -74,7 +74,7 @@ export default function Copy() {
   return (
     <main className="page relative z-10 px-4 pt-14 pb-24 md:pt-[clamp(56px,12vh,128px)] md:pr-8 md:pl-[clamp(24px,7vw,112px)]">
       <article id="column" className="max-w-[620px] text-pretty [&_p]:mb-[1.05em]">
-        <h1 className="mb-1 text-[2.15rem] leading-tight font-normal tracking-[0.01em]">Atelier</h1>
+        <h1 className="mb-1 text-[2.15rem] leading-tight font-normal tracking-[-0.02em]">Atelier</h1>
 
         {/* A dictionary entry for the name. */}
         <div className="mb-4 text-ink/60">
