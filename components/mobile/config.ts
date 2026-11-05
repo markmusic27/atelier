@@ -262,7 +262,7 @@ export const VIEW = {
    * holding a faint shadow character.
    */
   thumbnail: {
-    top: 0.06,
+    top: 0.113,
     side: 0.025,
     bottom: 0.05,
     pose: 0.6,
