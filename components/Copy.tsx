@@ -12,10 +12,31 @@ const NOTES: ReactNode[] = [
     </Link>{" "}
     (1972) at the National Gallery of Art.
   </>,
-  "Note to come.",
-  "Note to come.",
-  "Note to come.",
-  "Note to come.",
+  <>
+    Two OpenAI team members worked with GPT-6 Astra to design a prototype device for talking to Codex in under a
+    week, as a side project. Astra designed the enclosure, circuit board, interface, and software, without any
+    direct human edits (<Link href="https://openai.com/index/accelerating-engineering-for-the-physical-world/">OpenAI</Link>).
+  </>,
+  <>
+    Tom Krcha gave Astra an image of a house, and it rebuilt the house in Blender as editable geometry, down to the
+    toys and furniture (<Link href="https://x.com/tomkrcha/status/2095598645190291775">post</Link>). Separately,
+    NVIDIA found that Astra, with no robot-specific finetuning, beat the best existing robot policy on 120 simulated
+    manipulation tasks (<Link href="https://research.nvidia.com/labs/srl/projects/astranomy/">Astranomy</Link>).
+  </>,
+  <>
+    Kyle Vedder argues robots don’t need dexterous hands: bimanual parallel-jaw grippers handle most tasks, and for
+    the rest, adding an arm beats adding end-effector complexity (
+    <Link href="https://vedder.io/misc/the_case_against_human_hands.html">Vedder</Link>). We agree with his
+    reasoning but not his conclusion. Robots can swap end effectors, as Generalist does by pretraining one model
+    across roughly 9,000 of them (
+    <Link href="https://generalistai.com/blog/towards-machines-with-a-thousand-hands">Generalist</Link>).
+  </>,
+  <>
+    RoboHarm asked frontier policies driving real robot arms to do things a safe robot should refuse, such as
+    stabbing a baby doll, putting a screwdriver in a toaster, or mixing bleach and ammonia. Over 100 trials each,
+    Claude Fable 5.1 refused 20 times, GPT-6 Astra twice, and MolmoAct2 never (
+    <Link href="https://robocurve.org/roboharm/">Robocurve</Link>).
+  </>,
 ];
 
 const linkClass =
@@ -142,7 +163,7 @@ export default function Copy() {
             to, email us at <Link href="mailto:mmusic@stanford.edu">mmusic@stanford.edu</Link>.
           </p>
 
-          <footer className="mt-12">
+          <footer className="mt-12 text-[0.88em] text-ink/70">
             <hr className="mb-4 w-14 border-0 border-t border-current opacity-30" />
             {NOTES.map((note, i) => (
               <p key={i} id={`fn${i}`} className="scroll-mt-8">
