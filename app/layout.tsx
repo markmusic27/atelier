@@ -6,7 +6,7 @@ const description = "A workshop dedicated to asymmetric research bets in robot l
 
 // The share image is app/opengraph-image.png (and twitter-image.png), a capture of app/thumbnail.
 export const metadata: Metadata = {
-  metadataBase: new URL("https://theatelier.sh"),
+  metadataBase: new URL("https://atelierlab.io"),
   title: "Atelier",
   description,
   openGraph: { title: "Atelier", description, url: "/", siteName: "Atelier", type: "website" },

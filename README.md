@@ -6,7 +6,7 @@
 
 *a-tə-lye · proper noun.* A workshop dedicated to asymmetric research bets in robot learning.
 
-This is the homepage for [theatelier.sh](https://theatelier.sh): a single quiet page of text, with a
+This is the homepage for [atelierlab.io](https://atelierlab.io): a single quiet page of text, with a
 sculpture hanging beside it.
 
 ## The sculpture
