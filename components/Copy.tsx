@@ -138,10 +138,17 @@ export default function Copy() {
 
           <p>
             The second is automating the <Link href="https://vedder.io/misc/novelty_pump.html">novelty pump</Link>.
-            Robot foundation models only improve with truly novel data, and today, finding the states and tasks a policy
-            hasn’t seen is human operational work that doesn’t compound. Frontier models already know a lot
-            about the world, and we think they can accelerate this process across the robotics and RL stack.
-            We’re also interested in improving them as policies in their own right.
+            More data doesn’t automatically make a robot policy better; it only improves from data that shows it
+            something new, like a situation where it fails or a task it hasn’t tried. Today, collecting that data
+            is manual work: people watch the robot, spot where it struggles, and set up new demonstrations, and
+            that effort doesn’t compound as the robot is deployed more. We think frontier models can take over
+            parts of this loop, from spotting failures to generating new scenarios. The goal is a true data
+            flywheel, where every hour of deployment makes the policy better, which is{" "}
+            <Link href="https://vedder.io/misc/novelty_pump.html#:~:text=You%20do%20not%20get%20that%20by%20deploying%20more%20robots%20doing%20the%20same%20task.%20You%20can%20only%20get%20that%20by%20operating%20a%20Novelty%20Pump%2C%20which%20requires%20constant%20operational%20effort%20and%20does%20not%20compound.">
+              harder than it sounds
+            </Link>
+            .
+            Separately, we’re also interested in improving frontier models as policies in their own right.
           </p>
 
           <p>
