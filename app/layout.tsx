@@ -3,19 +3,18 @@ import Script from "next/script";
 import "./globals.css";
 
 const description = "A workshop dedicated to asymmetric research bets in robot learning.";
-// The page calls itself Atelier; the tab title is the fuller "Atelier Robotics", and link previews
-// say what it is. The site name is "Atelier Robotics" too: iMessage cuts a title that begins with
-// the site name and a separator, so it must not be just "Atelier".
+// The page calls itself Atelier; the tab and link previews use the fuller "Atelier Robotics". (No
+// separator in it: iMessage cuts "Atelier | " or "Atelier: " off a title, taking it for the site
+// name since it matches the domain.)
 const title = "Atelier Robotics";
-const shareTitle = "Atelier | A workshop for asymmetric bets in robot learning";
 
 // The share image is app/opengraph-image.png (and twitter-image.png), a capture of app/thumbnail.
 export const metadata: Metadata = {
   metadataBase: new URL("https://atelierlab.io"),
   title,
   description,
-  openGraph: { title: shareTitle, description, url: "/", siteName: title, type: "website" },
-  twitter: { card: "summary_large_image", title: shareTitle, description },
+  openGraph: { title, description, url: "/", type: "website" },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 export const viewport: Viewport = {
