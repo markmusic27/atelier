@@ -54,7 +54,7 @@ const sheet = (shape: ShapeKind, size: number, color: ColorKey, extra: Partial<S
 });
 
 /*
- * The arrangement. Mostly black and blue, with a single red.
+ * The arrangement. Mostly black and blue, with two red.
  * Add or remove arms freely: balance points, inertia and springs are all derived.
  */
 export const DESIGN: RodSpec = rod({
@@ -87,7 +87,7 @@ export const DESIGN: RodSpec = rod({
     }),
     right: sheet("boomerang", 0.32, "ink", { rot: 10 }),
   }),
-  // Right: blue petals growing toward the big leaf that counterweights everything.
+  // Right: petals (one red) growing toward the big leaf that counterweights everything.
   right: rod({
     len: 0.92,
     bend: 0.32,
@@ -107,7 +107,7 @@ export const DESIGN: RodSpec = rod({
         left: sheet("petal", 0.15, "blue", { rot: -10 }),
         right: sheet("blade", 0.18, "ink", { rot: 4 }),
       }),
-      right: sheet("petal", 0.24, "blue", { rot: 12 }),
+      right: sheet("petal", 0.24, "red", { rot: 12 }),
     }),
     right: sheet("leaf", 0.42, "blue", { rot: 8 }),
   }),
