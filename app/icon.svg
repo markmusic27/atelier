@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <title>Nabla</title>
-  <!-- KaTeX Main Regular outline for \nabla. -->
+  <!-- KaTeX Main Regular outline for \nabla, in the sculpture's light-mode blue-black (#233650)
+       lifted to the lightness of cs224r.com's nabla (#737373). -->
   <path
-    fill="#dc4a22"
+    fill="#5f7592"
     transform="translate(.52 56.59) scale(.07568 -.07568)"
     d="M46 676Q46 680 51 683H781Q786 680 786 676Q786 674 616.5 326Q447-22 444-26Q439-33 416-33Q393-33 388-26Q385-22 215.5 326Q46 674 46 676ZM697 596Q697 597 445 597Q193 597 193 596Q195 591 319.5 335.5Q444 80 445 80Q695 592 697 596Z"
   />

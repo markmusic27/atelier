@@ -148,7 +148,6 @@ export default function Copy() {
               harder than it sounds
             </Link>
             .
-            Separately, we’re also interested in improving frontier models as policies in their own right.
           </p>
 
           <p>

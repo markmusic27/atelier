@@ -74,7 +74,7 @@ const TEMPLATES: Record<ShapeKind, Template> = {
       [0.3, 0.16],
     ],
   },
-  // Lopsided fin with one bellied edge (one of the two reds).
+  // Lopsided fin with one bellied edge.
   fin: {
     attach: [0.08, 0.07],
     points: [

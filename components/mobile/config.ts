@@ -5,7 +5,7 @@
  * whole sculpture to fit), time is seconds, angles in DESIGN are degrees.
  */
 
-export type ColorKey = "ink" | "red" | "orange";
+export type ColorKey = "ink" | "teal" | "coral";
 export type ShapeKind = "leaf" | "petal" | "boomerang" | "blade" | "fin";
 
 /** A flat sheet-metal shape fixed to the end of an arm. */
@@ -54,7 +54,7 @@ const sheet = (shape: ShapeKind, size: number, color: ColorKey, extra: Partial<S
 });
 
 /*
- * The arrangement. Mostly black and orange, with two red.
+ * The arrangement. Mostly blue-black and teal, with one coral.
  * Add or remove arms freely: balance points, inertia and springs are all derived.
  */
 export const DESIGN: RodSpec = rod({
@@ -81,7 +81,7 @@ export const DESIGN: RodSpec = rod({
         bend: 0.55,
         rest: 30,
         drop: 0.06,
-        left: sheet("fin", 0.22, "red", { rot: 8 }),
+        left: sheet("fin", 0.22, "teal", { rot: 8 }),
         right: sheet("boomerang", 0.17, "ink", { rot: 18 }),
       }),
     }),
@@ -104,12 +104,12 @@ export const DESIGN: RodSpec = rod({
         bend: 0.6,
         rest: -28,
         drop: 0.05,
-        left: sheet("petal", 0.15, "orange", { rot: -10 }),
+        left: sheet("petal", 0.15, "teal", { rot: -10 }),
         right: sheet("blade", 0.18, "ink", { rot: 4 }),
       }),
-      right: sheet("petal", 0.24, "red", { rot: 12 }),
+      right: sheet("petal", 0.24, "coral", { rot: 12 }),
     }),
-    right: sheet("leaf", 0.42, "orange", { rot: 8 }),
+    right: sheet("leaf", 0.42, "teal", { rot: 8 }),
   }),
 });
 
@@ -269,8 +269,8 @@ export const VIEW = {
     arc: 1.7,
     font: 26,
     wall: 1.6,
-    shadow: 0.38,
-    shadowKeep: 0.5,
+    shadow: 0.3,
+    shadowKeep: 0.42,
     noise: 0.03,
   },
   wideArcLower: 0.29,
@@ -346,13 +346,13 @@ export const ASCII = {
   depthFade: 0.45,
   depthRange: 0.7,
   /** Opacity of the shadow dots. (Colors are the --mobile-* tokens in globals.css.) */
-  shadowOpacity: 0.3,
+  shadowOpacity: 0.22,
   /**
    * Each sheet's shadow is drawn `shadowSpread` times its size (about its center), with only
    * `shadowKeep` of its characters, so it falls soft and diffuse around the sheet.
    */
   shadowSpread: 1.35,
-  shadowKeep: 0.75,
+  shadowKeep: 0.62,
 };
 
 /** The arrangement for the side view: DESIGN, narrower and hanging a little lower (VIEW.side). */

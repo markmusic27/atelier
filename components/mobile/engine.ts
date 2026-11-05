@@ -190,9 +190,9 @@ export function runMobile(
       return scene.project(x + lightX * t, y + lightY * t, wallZ);
     },
     palette: {
-      ink: [18, 18, 17],
-      red: [230, 25, 30],
-      orange: [255, 87, 20],
+      ink: [35, 54, 80],
+      teal: [8, 127, 140],
+      coral: [212, 76, 104],
       wire: [43, 42, 39],
       string: [168, 163, 154],
       paper: [255, 255, 255],
