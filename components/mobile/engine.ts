@@ -8,6 +8,7 @@
 
 import { AIR, BREEZE, DESIGN, DESIGN_SIDE, PHYSICS, VIEW, type ColorKey } from "./config";
 import {
+  arm,
   buildMobile,
   kinematics,
   resetPose,
@@ -45,8 +46,11 @@ export interface Scene {
   projectShadow: (x: number, y: number, z: number) => number;
   /** Colors from the --mobile-* tokens in globals.css. */
   palette: Record<PaletteKey, RGB>;
-  /** Beside the text ("side"), above it ("header"), or above it on a phone-width screen ("phone"). */
-  layout: "side" | "header" | "phone";
+  /**
+   * Beside the text ("side"), above it ("header"), above it on a phone-width screen ("phone"),
+   * or alone as a still picture filling the canvas ("thumbnail", the share image).
+   */
+  layout: "side" | "header" | "phone" | "thumbnail";
   /** How frozen the mobile is for reading (0 moving freely, 1 held still; VIEW.scrollCalm). */
   quiet: number;
 }
@@ -81,8 +85,17 @@ const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x
 /** Upper bound on the canvas backing store, in device pixels. */
 const MAX_CANVAS_PIXELS = 36e6;
 
+export interface MobileOptions {
+  /** Draw a still picture filling the canvas (the share image, app/thumbnail) instead of the live page. */
+  thumbnail?: boolean;
+}
+
 /** Starts the mobile on a canvas. Returns a cleanup function. */
-export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Scene) => Renderer): () => void {
+export function runMobile(
+  canvas: HTMLCanvasElement,
+  createRenderer: (scene: Scene) => Renderer,
+  options: MobileOptions = {},
+): () => void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return () => {};
   const html = document.documentElement;
@@ -197,6 +210,12 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   const phoneWidth = matchMedia(`(max-width: ${VIEW.header.phone.below - 0.02}px)`);
 
   function layout() {
+    if (options.thumbnail) layoutThumbnail();
+    else layoutPage();
+    fitCanvas();
+  }
+
+  function layoutPage() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     let stacked = narrow.matches;
@@ -258,7 +277,51 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     } else {
       html.style.removeProperty("--mobile-h");
     }
+  }
 
+  /**
+   * The share image: the side view's arrangement, still, in the pose VIEW.thumbnail sets, as
+   * large as fits the canvas within its margins.
+   */
+  function layoutThumbnail() {
+    scene.layout = "thumbnail";
+    use(wide);
+    wallZ = -reach.depth * VIEW.thumbnail.wall;
+    setArcs(VIEW.thumbnail.arc);
+    resetPose(mobile);
+    settleToward(mobile, VIEW.thumbnail.pose, 1);
+    kinematics(mobile);
+    // Its extent on screen in this pose, shadow included, measured at a scale of 1 from the top pivot.
+    Object.assign(scene, { S: 1, ox: 0, oy: 0 });
+    let left = 0;
+    let right = 0;
+    let low = 0;
+    const visit = (x: number, y: number, z: number, shadow = false) => {
+      if (shadow) scene.projectShadow(x, y, z);
+      else scene.project(x, y, z);
+      left = Math.min(left, scene.PX);
+      right = Math.max(right, scene.PX);
+      low = Math.max(low, scene.PY);
+    };
+    for (const r of mobile.rods) {
+      for (let i = 0; i <= 16; i++) {
+        const u = -r.a + (r.len * i) / 16;
+        visit(r.x + u * r.dx, r.y + arm(r, u), r.z + u * r.dz);
+      }
+      for (const s of r.shapes)
+        for (let j = 0; j < s.pts.length; j += 2)
+          for (const shadow of [false, true]) visit(r.x + s.pts[j] * r.dx, r.y + s.pts[j + 1], r.z + s.pts[j] * r.dz, shadow);
+    }
+    const { width, height } = canvas.getBoundingClientRect();
+    const { top, side, bottom: below } = VIEW.thumbnail;
+    const s = Math.min((width * (1 - 2 * side)) / (right - left), (height * (1 - top - below)) / low);
+    scene.S = s;
+    scene.oy = height * top;
+    scene.ox = width / 2 - (s * (left + right)) / 2;
+  }
+
+  /** Sizes the canvas's backing store to its box and redraws. */
+  function fitCanvas() {
     const rect = canvas.getBoundingClientRect();
     scene.cssW = rect.width;
     scene.cssH = rect.height;
@@ -266,7 +329,8 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
     // stays sharp when zoomed in. (A viewport-sized canvas then matches the screen's own
     // pixels at any zoom; the cap only guards against absurd sizes.)
     const maxDpr = Math.sqrt(MAX_CANVAS_PIXELS / Math.max(1, scene.cssW * scene.cssH));
-    scene.dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+    const density = window.devicePixelRatio || 1;
+    scene.dpr = Math.min(options.thumbnail ? Math.max(2, density) : density, maxDpr); // the share image at 2× or more
     canvas.width = Math.round(scene.cssW * scene.dpr);
     canvas.height = Math.round(scene.cssH * scene.dpr);
     renderer.resize();
@@ -469,7 +533,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   }
 
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  let still = reduceMotion.matches;
+  let still = options.thumbnail || reduceMotion.matches;
   let raf = 0;
   let last = 0;
   let acc = 0;
@@ -524,7 +588,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   function start() {
     cancelAnimationFrame(raf);
     if (still) {
-      startPose(mobile, true);
+      if (!options.thumbnail) startPose(mobile, true); // (the thumbnail keeps its display pose)
       render();
     } else {
       startPose(mobile);
@@ -534,7 +598,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   }
 
   const onMotionPref = () => {
-    still = reduceMotion.matches;
+    still = options.thumbnail || reduceMotion.matches;
     start();
   };
   const colorScheme = matchMedia("(prefers-color-scheme: dark)");
@@ -553,6 +617,12 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   readColors();
   layout();
   start();
+
+  // A still picture is drawn once, so draw it again once the typewriter faces have loaded.
+  let alive = true;
+  document.fonts.ready.then(() => {
+    if (alive && still) layout();
+  });
 
   // Lay out again when the pixel density changes without a resize (e.g. the window moves
   // to another display): watch for the current density to stop matching.
@@ -579,6 +649,7 @@ export function runMobile(canvas: HTMLCanvasElement, createRenderer: (scene: Sce
   colorScheme.addEventListener("change", onScheme);
 
   return () => {
+    alive = false;
     cancelAnimationFrame(raf);
     io.disconnect();
     window.removeEventListener("resize", layout);

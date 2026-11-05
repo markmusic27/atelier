@@ -2,11 +2,15 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
+const description = "A workshop dedicated to asymmetric research bets in robot learning.";
 
-
+// The share image is app/opengraph-image.png (and twitter-image.png), a capture of app/thumbnail.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://theatelier.sh"),
   title: "Atelier",
-  description: "Atelier is a workshop for robot learning.",
+  description,
+  openGraph: { title: "Atelier", description, url: "/", siteName: "Atelier", type: "website" },
+  twitter: { card: "summary_large_image", title: "Atelier", description },
 };
 
 export const viewport: Viewport = {

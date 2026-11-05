@@ -253,6 +253,26 @@ export const VIEW = {
    * The arms below get only wideArcLower of that extra droop (0 = as designed).
    */
   wideArc: 1.7,
+  /**
+   * The share image (app/thumbnail): margins as fractions of its height (top, bottom) and width
+   * (side); the pose, as a share of the arms' resting turns (the open display pose, nearly flat
+   * to the viewer); how far the arcs droop (as wideArc); the font size (CSS px); the wall
+   * shadow, further back (as shadow.wall) and stronger (opacity) than on the page, with only
+   * `shadowKeep` of its characters; and `noise`, the share of the background's character cells
+   * holding a faint shadow character.
+   */
+  thumbnail: {
+    top: 0.06,
+    side: 0.025,
+    bottom: 0.05,
+    pose: 0.6,
+    arc: 1.7,
+    font: 26,
+    wall: 1.6,
+    shadow: 0.38,
+    shadowKeep: 0.5,
+    noise: 0.03,
+  },
   wideArcLower: 0.29,
   shadow: {
     /** Distance of the wall behind the thread, as a multiple of the mobile's radius. */

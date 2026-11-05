@@ -26,7 +26,7 @@
  * behind it shows through between its characters.
  */
 
-import { ASCII } from "./config";
+import { ASCII, VIEW } from "./config";
 import type { PaletteKey, Renderer, Scene } from "./engine";
 import { arm, type Rod, type Shape } from "./physics";
 import { mulberry32 } from "./shapes";
@@ -462,7 +462,10 @@ export function createAsciiRenderer(scene: Scene): Renderer {
   function resize() {
     const { S } = scene;
     const minFont = scene.layout === "phone" ? ASCII.phoneMinFont : ASCII.minFont;
-    const fontPx = clamp(Math.round(S * ASCII.fontScale * 2) / 2, minFont, ASCII.maxFont);
+    const fontPx =
+      scene.layout === "thumbnail"
+        ? VIEW.thumbnail.font
+        : clamp(Math.round(S * ASCII.fontScale * 2) / 2, minFont, ASCII.maxFont);
     sheetFont = `${ASCII.sheetWeight} ${fontPx}px ${ASCII.font}`;
     wireFont = `${fontPx}px ${ASCII.font}`;
     ctx.font = sheetFont;
@@ -485,6 +488,22 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     }
   }
 
+  /** A copy of a sheet's shadow cells with only VIEW.thumbnail.shadowKeep of them printed. */
+  function sparse(cells: string[]) {
+    const keep = mulberry32(cells.length);
+    return cells.map((c) => (keep() < VIEW.thumbnail.shadowKeep ? c : " "));
+  }
+
+  /** Faint shadow characters in a few of the background's cells (VIEW.thumbnail.noise). */
+  function scatterNoise() {
+    const pick = mulberry32(17);
+    const glyphs = ASCII.shadowGlyphs;
+    ctx.textAlign = "center";
+    for (let y = ch / 2; y < scene.cssH; y += ch)
+      for (let x = cw / 2; x < scene.cssW; x += cw)
+        if (pick() < VIEW.thumbnail.noise) ctx.fillText(glyphs[Math.floor(pick() * glyphs.length)], x, y);
+  }
+
   function render() {
     const { dpr, cssW, cssH } = scene;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -495,12 +514,15 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     lastTime = now;
     for (const g of grids) update(g, dt);
 
-    // 1. The shadow on the wall.
+    // 1. The shadow on the wall. (The share image thins it out and scatters a few of its
+    //    characters over the background.)
+    const thumb = scene.layout === "thumbnail";
     ctx.font = sheetFont;
     ctx.fillStyle = faded("wire", 0);
-    ctx.globalAlpha = ASCII.shadowOpacity;
+    ctx.globalAlpha = thumb ? VIEW.thumbnail.shadow : ASCII.shadowOpacity;
+    if (thumb) scatterNoise();
     ctx.textAlign = "left";
-    for (const g of grids) printGrid(g, scene.projectShadow, g.shadowRows, g.shade);
+    for (const g of grids) printGrid(g, scene.projectShadow, g.shadowRows, thumb ? sparse(g.shade) : g.shade);
 
     // 2. The thread, rising out of view.
     ctx.font = wireFont;
