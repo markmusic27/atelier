@@ -80,7 +80,7 @@ export default function Copy() {
         <div className="mb-4 text-ink/60">
           a-tə-lye · <i>proper noun</i>
         </div>
-        <div className="mb-7">A workshop dedicated to asymmetric research bets in robot learning.</div>
+        <div className="mb-7">A research workshop for people exploring unconventional ideas in robot learning.</div>
         <hr className="mb-7 w-14 border-0 border-t border-current opacity-30" />
 
         {/* The body copy. */}

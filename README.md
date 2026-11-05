@@ -4,7 +4,7 @@
 
 # Atelier
 
-*a-tə-lye · proper noun.* A workshop dedicated to asymmetric research bets in robot learning.
+*a-tə-lye · proper noun.* A research workshop for people exploring unconventional ideas in robot learning.
 
 This is the homepage for [atelierlab.io](https://atelierlab.io): a single quiet page of text, with a
 sculpture hanging beside it.
