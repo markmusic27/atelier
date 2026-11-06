@@ -95,23 +95,23 @@ html.fk body {
 }
 
 /*
- * Palette. The --mobile-* tokens are read by the canvas (components/mobile/), so the
- * sculpture follows the color scheme along with the text.
+ * Palette, light only (the page ignores the system's dark mode). The --mobile-* tokens are
+ * read by the canvas (components/mobile/).
  */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --paper: #ffffff;
   --ink: #1d1d1b;
 
   /* The arms, and the sheets' three text colors: teal (the main one), coral (one sheet), and a
-     blue-black (pale blue-gray in dark mode). */
+     blue-black. */
   --mobile-wire: #2b2a27;
   --mobile-ink: #233650;
   --mobile-teal: #087f8c;
   --mobile-coral: #d44c68;
   /* The strings (the thread and the hooks), set apart from the arms by color. */
   --mobile-string: #a8a39a;
-  /* The page background, for the canvas (follows --paper in dark mode too). */
+  /* The page background, for the canvas. */
   --mobile-paper: var(--paper);
   /* Each sheet's backing: its text color at this opacity over the page (0 = page color). */
   --mobile-tint: 0.12;
@@ -120,21 +120,6 @@ html.fk body {
 
   /* Height of the mobile when it sits above the text on narrow screens. */
   --mobile-h: clamp(260px, 82vw, 440px);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0a0a0a;
-    --ink: #ebe8e1;
-
-    --mobile-wire: #b5afa4;
-    --mobile-ink: #bfd0e2;
-    --mobile-teal: #65d4dc;
-    --mobile-coral: #ff8fa7;
-    --mobile-string: #45423e;
-    --mobile-tint: 0.15;
-    --mobile-depth-fade: 0.45;
-  }
 }
 
 html {

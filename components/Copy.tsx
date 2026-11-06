@@ -74,13 +74,8 @@ export default function Copy() {
   return (
     <main className="page relative z-10 px-4 pt-14 pb-24 md:pt-[clamp(56px,12vh,128px)] md:pr-8 md:pl-[clamp(24px,7vw,112px)]">
       <article id="column" className="max-w-[620px] text-pretty [&_p]:mb-[1.05em]">
-        <h1 className="mb-1 text-[2.15rem] leading-tight font-normal tracking-[-0.02em]">Atelier</h1>
-
-        {/* A dictionary entry for the name. */}
-        <div className="mb-4 text-ink/60">
-          a-tə-lye · <i>proper noun</i>
-        </div>
-        <div className="mb-7">A research workshop for people exploring unconventional ideas in robot learning.</div>
+        <h1 className="mb-3 text-[2.15rem] leading-tight font-normal tracking-[-0.02em]">Atelier</h1>
+        <div className="mb-7">A research workshop for people taking asymmetric bets in robot learning.</div>
         <hr className="mb-7 w-14 border-0 border-t border-current opacity-30" />
 
         {/* The body copy. */}
@@ -115,14 +110,9 @@ export default function Copy() {
           </p>
 
           <p>
-            The name comes from nineteenth-century Paris, where ateliers were small workshops for artists and
-            architects to learn and create with one another outside of the academy. Much of the era’s most
-            important work came out of independent ateliers like the Académie Suisse, where Monet and Cézanne
-            trained.
-          </p>
-
-          <p>
-            We think robotics needs the same thing right now, and we envision Atelier as a contemporary
+            The name comes from nineteenth-century Paris, where{" "}
+            <Link href="https://en.wikipedia.org/wiki/Atelier">ateliers</Link> were small workshops for artists and
+            architects to learn and create with one another outside of the academy. We think robotics needs the same thing right now, and we envision Atelier as a contemporary
             equivalent for engineers and roboticists. The point is not to commercialize our work, but to provide
             a space with resources and other people working seriously on hard problems.
           </p>

@@ -4,7 +4,7 @@
 
 # Atelier
 
-*a-tə-lye · proper noun.* A research workshop for people exploring unconventional ideas in robot learning.
+*a-tə-lye · proper noun.* A research workshop for people taking asymmetric bets in robot learning.
 
 We're a small group of engineers and roboticists exploring ideas that are newly within reach. Most of us
 are Stanford researchers who also work in labs like [ILIAD](https://iliad.stanford.edu/),

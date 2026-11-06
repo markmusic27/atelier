@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
-const description = "A research workshop for people exploring unconventional ideas in robot learning.";
+const description = "A research workshop for people taking asymmetric bets in robot learning.";
 // The page calls itself Atelier; the tab and link previews use the fuller "Atelier Robotics". (No
 // separator in it: iMessage cuts "Atelier | " or "Atelier: " off a title, taking it for the site
 // name since it matches the domain.)
@@ -18,10 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

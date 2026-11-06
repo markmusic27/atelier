@@ -339,8 +339,8 @@ export const ASCII = {
   /**
    * Depth: arms and strings farther from the viewer are printed closer to the background
    * color (sheets keep their exact colors).
-   * depthFade is the most they fade (0–1; --mobile-depth-fade in globals.css overrides it
-   * per color scheme); depthRange is the depth (world units, either side of the thread)
+   * depthFade is the most they fade (0–1; --mobile-depth-fade in globals.css overrides it);
+   * depthRange is the depth (world units, either side of the thread)
    * over which the fade runs from none to full.
    */
   depthFade: 0.45,
