@@ -31,7 +31,7 @@ export const FIELD = {
    * at opacity `alpha` (in --ink). About `dash` of them are dashes (each line has its own
    * mix), the rest periods, with the odd single gap (`gap`).
    */
-  glyph: { size: 12, step: 6.5, alpha: 0.1, dash: 0.6, gap: 0.05 },
+  glyph: { size: 12, step: 6.5, alpha: 0.11, dash: 0.6, gap: 0.05 },
   /** Redraws per second while something moves (the waves, the sculpture). */
   fps: 30,
 
