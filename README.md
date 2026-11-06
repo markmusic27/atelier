@@ -4,7 +4,7 @@
 
 # Atelier
 
-*a-tə-lye · proper noun.* A research workshop for people taking asymmetric bets in robot learning.
+A research workshop for people taking asymmetric bets in robot learning.
 
 We're a small group of engineers and roboticists exploring ideas that are newly within reach. Most of us
 are Stanford researchers who also work in labs like [ILIAD](https://iliad.stanford.edu/),
@@ -22,11 +22,10 @@ even a few months ago.
 
 ## The name
 
-In nineteenth-century Paris, ateliers were small workshops where artists and architects learned and
-created with one another outside of the academy. Much of the era's most important work came out of
-independent ateliers like the Académie Suisse, where Monet and Cézanne trained. We think robotics needs
-the same thing now. The point is not to commercialize our work, but to provide a space with resources and
-other people working seriously on hard problems.
+In nineteenth-century Paris, [ateliers](https://en.wikipedia.org/wiki/Atelier) were small workshops
+where artists and architects learned and created with one another outside of the academy. We think
+robotics needs the same thing now. The point is not to commercialize our work, but to provide a space with
+resources and other people working seriously on hard problems.
 
 ## Early directions
 
