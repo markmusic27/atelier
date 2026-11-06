@@ -145,12 +145,14 @@ export const PHYSICS = {
   swingLimit: 25,
   turnLimit: 12,
   /**
-   * The stop at those limits: from `from` of the way there the hook stiffens, by up to
-   * `stiffness` times its own spring at the limit, and damps motion outward (up to `damping`
-   * times critical), so the mobile eases to a halt instead of hitting a wall. At the limit
-   * it stops outright.
+   * The stop at those limits, a springy cushion: from `from` of the way there the hook
+   * stiffens, by up to `stiffness` times its own spring at the limit (rising as the
+   * `power` of how far in it is, so swings that only reach partway barely feel it), and
+   * damps motion outward only lightly (`damping` times critical), so an arm that swings into
+   * it springs back out with most of its speed. One that still reaches the limit rebounds
+   * off it with `bounce` of its speed.
    */
-  stop: { from: 0.6, stiffness: 6, damping: 1.5 },
+  stop: { from: 0.6, stiffness: 40, power: 3, damping: 0.1, bounce: 0.6 },
 };
 
 /** The ambient air current: smooth, slow and quiet. */
@@ -353,6 +355,12 @@ export const ASCII = {
    */
   shadowSpread: 1.35,
   shadowKeep: 0.62,
+  /**
+   * Whether the live page draws the sheets' shadows on the wall (the share image always does).
+   * Off while the page has its background field (components/field/), whose lines stir as the
+   * sheets move instead.
+   */
+  wallShadow: false,
 };
 
 /** The arrangement for the side view: DESIGN, narrower and hanging a little lower (VIEW.side). */

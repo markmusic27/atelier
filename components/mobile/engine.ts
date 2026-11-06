@@ -20,6 +20,7 @@ import {
   type Shape,
   type Wind,
 } from "./physics";
+import { live } from "./live";
 import { mulberry32 } from "./shapes";
 
 export type RGB = [number, number, number];
@@ -530,6 +531,41 @@ export function runMobile(
       s.sy = scene.PY;
     }
     renderer.render();
+    if (!options.thumbnail) shareLive();
+  }
+
+  /** Publishes where the sheets and wires are on screen (live.ts). */
+  function shareLive() {
+    const { S } = scene;
+    live.canvas = canvas;
+    live.sheets.length = mobile.shapes.length;
+    mobile.shapes.forEach((s, i) => {
+      const o = live.sheets[i] ?? (live.sheets[i] = { x: 0, y: 0, r: 0 });
+      o.x = s.sx;
+      o.y = s.sy;
+      o.r = Math.sqrt(s.area / Math.PI) * S;
+    });
+    const w = live.wires;
+    w.length = 0;
+    w.push(scene.ox, 0, scene.ox, scene.oy);
+    for (const r of mobile.rods) {
+      if (r.parent) {
+        scene.project(r.x, r.y - r.drop, r.z);
+        w.push(scene.PX, scene.PY);
+        scene.project(r.x, r.y, r.z);
+        w.push(scene.PX, scene.PY);
+      }
+      // The arm, as a few straight pieces along its curve.
+      let px = 0;
+      let py = 0;
+      for (let i = 0, n = 8; i <= n; i++) {
+        const u = -r.a + (r.len * i) / n;
+        scene.project(r.x + u * r.dx, r.y + arm(r, u), r.z + u * r.dz);
+        if (i > 0) w.push(px, py, scene.PX, scene.PY);
+        px = scene.PX;
+        py = scene.PY;
+      }
+    }
   }
 
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -643,6 +679,7 @@ export function runMobile(
 
   return () => {
     alive = false;
+    if (live.canvas === canvas) live.canvas = null;
     cancelAnimationFrame(raf);
     io.disconnect();
     window.removeEventListener("resize", layout);

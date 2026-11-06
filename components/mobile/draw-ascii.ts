@@ -537,7 +537,8 @@ export function createAsciiRenderer(scene: Scene): Renderer {
     if (thumb) scatterNoise();
     ctx.textAlign = "left";
     const keep = thumb ? VIEW.thumbnail.shadowKeep : ASCII.shadowKeep;
-    for (const g of grids) printGrid(g, scene.projectShadow, g.shadowRows, sparse(g.shade, keep), ASCII.shadowSpread);
+    if (thumb || ASCII.wallShadow)
+      for (const g of grids) printGrid(g, scene.projectShadow, g.shadowRows, sparse(g.shade, keep), ASCII.shadowSpread);
 
     // 2. The thread, rising out of view.
     ctx.font = wireFont;

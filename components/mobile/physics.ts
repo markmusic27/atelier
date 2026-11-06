@@ -496,12 +496,12 @@ export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1, 
     const rel = r.theta - (p ? p.theta : 0) - r.rest * restScale;
     const relW = r.omega - (p ? p.omega : 0);
     let ts = -r.k * rel - r.c * relW;
-    // Nearing the limit (measured from the true rest), the hook stiffens and damps outward
-    // motion, easing in so it reads as the hook tightening.
+    // Nearing the limit (measured from the true rest), the hook stiffens, easing in so it
+    // reads as the hook tightening, and springs the arm back.
     const off = r.theta - (p ? p.theta : 0) - r.rest;
     const into = (Math.abs(off) / r.limit - stop.from) / (1 - stop.from);
     if (into > 0) {
-      const f = Math.min(1, into) ** 2;
+      const f = Math.min(1, into) ** stop.power;
       const out = Math.sign(off);
       ts -= out * f * stop.stiffness * r.k * r.limit;
       if (relW * out > 0) ts -= f * stop.damping * 2 * Math.sqrt(r.k * r.I) * relW;
@@ -512,7 +512,8 @@ export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1, 
 
   // Semi-implicit Euler: stable and plenty accurate at this timestep. Parents come first, so
   // each arm's limit is checked against where its parent has just moved: an arm that would
-  // pass it stops there, keeping the reach bound (and the text) safe from any gust.
+  // pass it is held there and rebounds, keeping the reach bound (and the text) safe from any
+  // gust.
   for (const r of rods) {
     r.omega += (r.torque / r.I) * dt;
     r.theta += r.omega * dt;
@@ -522,7 +523,7 @@ export function step(m: Mobile, dt: number, t: number, air: AirField, stir = 1, 
       const out = Math.sign(off);
       r.theta -= off - out * r.limit;
       const pw = p ? p.omega : 0;
-      if ((r.omega - pw) * out > 0) r.omega = pw;
+      if ((r.omega - pw) * out > 0) r.omega = pw - stop.bounce * (r.omega - pw);
     }
   }
 }
