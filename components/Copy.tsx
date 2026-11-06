@@ -91,13 +91,13 @@ export default function Copy() {
 
           <ol className="mb-[1.05em] list-decimal pl-[1.4em] marker:text-ink/60 [&_li]:mb-[0.6em] [&_li]:pl-[0.2em]">
             <li>
-              Before an actual experiment, it used to take weeks to integrate components from several vendors,
-              calibrate poses, and fabricate a test rig, to name a few. Frontier AI has collapsed the cost of
-              software, and is starting to do the same for parts of hardware.
+              Running an experiment used to take weeks: integrating components from several vendors, calibrating
+              poses, and fabricating a test rig, to name a few. Frontier AI has collapsed the cost of software and
+              is beginning to do the same for parts of hardware.
               <Ref n={1} /> Most of the setup is no longer the bottleneck.
             </li>
             <li>
-              Frontier LLMs are also demonstrating resounding spatial reasoning capabilities, strong enough to
+              Frontier LLMs are also demonstrating striking spatial reasoning capabilities, strong enough to
               generate realistic 3D environments and even actuate robots directly.
               <Ref n={2} /> We think much of the field still underestimates how much value these models can
               unlock when used creatively.
@@ -105,8 +105,9 @@ export default function Copy() {
           </ol>
 
           <p>
-            Together, these mean that testing a strange idea is far cheaper than it was even a few months ago,
-            and more ambitious research directions are now within reach.
+            Together, these mean that testing a strange idea now costs a fraction of what it did even a few
+            months ago. Directions that once needed a well-funded lab and years of infrastructure are now within
+            reach of a small group with a good idea and the will to pursue it.
           </p>
 
           <p>

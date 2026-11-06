@@ -234,8 +234,14 @@ export const VIEW = {
    * viewer so it spreads to its full width, keeping `depth` of its resting turns; then it is
    * held exactly still, letters included. Only a gust stronger than `wake` (0–1; a quick
    * sweep of the cursor or a click) wakes it; scrolling back up frees it.
+   *
+   * Scrolling down still stirs it a little: each CSS px scrolled down turns every arm a
+   * touch faster (`nudge` rad/s, some one way and some the other), up to `nudgeMax` rad/s
+   * however much is scrolled (a few degrees of sway), and the settling holds off for about
+   * `nudgeHold` s, so the arms sway slightly and then ease back into the pose. Scrolling up
+   * doesn't.
    */
-  scrollCalm: { over: 0.03, settle: 2.4, depth: 0.6, wake: 0.3 },
+  scrollCalm: { over: 0.03, settle: 2.4, depth: 0.6, wake: 0.3, nudge: 0.0024, nudgeMax: 0.16, nudgeHold: 1.6 },
   /**
    * The side view (mobile beside the text) uses DESIGN with its arms `narrow` times as long
    * (so it draws larger in the same space, characters included), the same droop at the

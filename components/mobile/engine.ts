@@ -405,6 +405,11 @@ export function runMobile(
   // comes to rest there (and its letters stop changing). Cursor breezes and puffs still act.
   let quiet = 0;
   let frozen = false; // held exactly still (no simulation at all) while reading
+  // Scrolling down stirs it a little even then (VIEW.scrollCalm.nudge): `stirred` (0–1) is
+  // how recently, holding off the settling while it lasts. Each arm turns its own way.
+  let stirred = 0;
+  let lastScroll = typeof window === "undefined" ? 0 : window.scrollY;
+  const nudgeWay = mobile.rods.map((r, i) => (i % 2 ? 1 : -1) * (0.6 + 0.4 * Math.abs(Math.sin(i * 12.9898 + 4.1))) * (r.parent ? 1 : 0.5));
 
   /**
    * Whether a point (canvas px) is in the artwork's area, the space the mobile can reach.
@@ -604,16 +609,29 @@ export function runMobile(
     const target = gust > calm.wake ? 0 : scrolled; // only a deliberate gust wakes it
     quiet += (target - quiet) * (1 - Math.exp(-dt / 0.5));
     scene.quiet = quiet;
+    // Scrolling down turns each arm a touch and holds off the settling for a moment.
+    const down = window.scrollY - lastScroll;
+    lastScroll = window.scrollY;
+    if (down > 0) {
+      // Up to a cap, so even a long, fast scroll only sways it a few degrees (and an arm
+      // already swinging faster, from a gust, is left alone).
+      mobile.rods.forEach((r, i) => {
+        const cap = calm.nudgeMax * Math.abs(nudgeWay[i]);
+        if (Math.abs(r.omega) < cap) r.omega = clamp(r.omega + calm.nudge * down * nudgeWay[i], -cap, cap);
+      });
+      stirred = 1;
+    } else stirred *= Math.exp(-dt / calm.nudgeHold);
     // Nearly settled and still meant to be still: snap exactly into the display pose with
     // every velocity at zero, and stop simulating until it is woken.
-    if (target === 1 && quiet > 0.99) {
+    if (target === 1 && quiet > 0.99 && stirred < 0.01) {
       if (!frozen) settleToward(mobile, calm.depth, 1);
       frozen = true;
     } else frozen = false;
+    const settle = calm.settle * quiet * quiet * (1 - stirred) ** 2;
     acc = frozen ? 0 : acc + dt;
     while (acc >= PHYSICS.timestep) {
       step(mobile, PHYSICS.timestep, airT, air, 1 - quiet + BREEZE.gustEddy * gust, 1 - (1 - calm.depth) * quiet);
-      settleToward(mobile, calm.depth, 1 - Math.exp(-PHYSICS.timestep * calm.settle * quiet * quiet));
+      settleToward(mobile, calm.depth, 1 - Math.exp(-PHYSICS.timestep * settle));
       airT += PHYSICS.timestep * (1 + BREEZE.gustTempo * gust);
       simT += PHYSICS.timestep;
       acc -= PHYSICS.timestep;

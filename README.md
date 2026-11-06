@@ -12,13 +12,15 @@ are Stanford researchers who also work in labs like [ILIAD](https://iliad.stanfo
 
 ## Why now
 
-The economics and the possibilities of robotics research are shifting. Before an actual experiment, it
-used to take weeks to integrate components from several vendors, calibrate poses, and fabricate a test
-rig. Frontier AI has collapsed the cost of that software and is starting to do the same for parts of
-hardware. Frontier models are also showing strong spatial reasoning, enough to generate realistic 3D
-environments and even actuate robots directly, and we think much of the field still underestimates what
-they can unlock when used creatively. Together, these make testing a strange idea far cheaper than it was
-even a few months ago.
+The economics and the possibilities of robotics research are shifting. Running an experiment used to take
+weeks: integrating components from several vendors, calibrating poses, and fabricating a test rig.
+Frontier AI has collapsed the cost of software and is beginning to do the same for parts of hardware. Most
+of the setup is no longer the bottleneck. Frontier models are also showing strong spatial reasoning,
+enough to generate realistic 3D environments and even actuate robots directly, and we think much of the
+field still underestimates what they can unlock when used creatively. Together, these mean that testing a
+strange idea now costs a fraction of what it did even a few months ago. Directions that once needed a
+well-funded lab and years of infrastructure are now within reach of a small group with a good idea and the
+will to pursue it.
 
 ## The name
 
